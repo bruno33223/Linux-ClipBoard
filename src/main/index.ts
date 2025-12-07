@@ -40,6 +40,7 @@ const createWindow = async () => {
         alwaysOnTop: true,
         transparent: true,
         skipTaskbar: true,
+        type: 'dialog',
         icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
