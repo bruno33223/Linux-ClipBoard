@@ -61,9 +61,7 @@ export const registerIpcHandlers = () => {
         setTimeout(() => {
             if (item.type === 'text') {
                 clipboard.writeText(item.content);
-                exec('xdotool click 1', () => { // Focus click? No, bad idea.
-                    // Just key press
-                });
+                // Focus click? No, bad idea. Removed because it moves cursor to mouse position.
                 exec('xdotool key --clearmodifiers ctrl+v', (error) => {
                     if (error) console.error('Failed to paste:', error);
                 });

@@ -65,8 +65,8 @@
     "vite-plugin-electron-renderer": "^0.14.6"
   },
   "build": {
-    "appId": "com.bruno.clipboard-manager",
-    "productName": "Win-ClipBoard",
+    "appId": "com.bruno.linux-clipboard",
+    "productName": "Linux-Clipboard",
     "files": [
       "dist",
       "dist-electron"

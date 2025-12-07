@@ -1,1 +1,31 @@
-"use strict";const e=require("electron"),t={GET_HISTORY:"get-history",DELETE_ITEM:"delete-item",TOGGLE_PIN:"toggle-pin",CLEAR_ALL:"clear-all",PASTE_ITEM:"paste-item",GET_SETTINGS:"get-settings",UPDATE_SETTING:"update-setting",REORDER_ITEMS:"reorder-items",CLIPBOARD_CHANGED:"clipboard-changed"};e.contextBridge.exposeInMainWorld("electron",{getHistory:()=>e.ipcRenderer.invoke(t.GET_HISTORY),deleteItem:r=>e.ipcRenderer.invoke(t.DELETE_ITEM,r),togglePin:r=>e.ipcRenderer.invoke(t.TOGGLE_PIN,r),clearAll:()=>e.ipcRenderer.invoke(t.CLEAR_ALL),pasteItem:r=>e.ipcRenderer.invoke(t.PASTE_ITEM,r),getSettings:()=>e.ipcRenderer.invoke(t.GET_SETTINGS),updateSetting:(r,n)=>e.ipcRenderer.invoke(t.UPDATE_SETTING,r,n),reorderItems:(r,n)=>e.ipcRenderer.invoke(t.REORDER_ITEMS,r,n),getAppPath:()=>e.ipcRenderer.invoke("get-app-path"),onClipboardChanged:r=>{const n=(E,i)=>r(i);return e.ipcRenderer.on(t.CLIPBOARD_CHANGED,n),()=>{e.ipcRenderer.removeListener(t.CLIPBOARD_CHANGED,n)}}});
+"use strict";
+const electron = require("electron");
+const IPC_CHANNELS = {
+  GET_HISTORY: "get-history",
+  DELETE_ITEM: "delete-item",
+  TOGGLE_PIN: "toggle-pin",
+  CLEAR_ALL: "clear-all",
+  PASTE_ITEM: "paste-item",
+  GET_SETTINGS: "get-settings",
+  UPDATE_SETTING: "update-setting",
+  REORDER_ITEMS: "reorder-items",
+  CLIPBOARD_CHANGED: "clipboard-changed"
+};
+electron.contextBridge.exposeInMainWorld("electron", {
+  getHistory: () => electron.ipcRenderer.invoke(IPC_CHANNELS.GET_HISTORY),
+  deleteItem: (id) => electron.ipcRenderer.invoke(IPC_CHANNELS.DELETE_ITEM, id),
+  togglePin: (id) => electron.ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_PIN, id),
+  clearAll: () => electron.ipcRenderer.invoke(IPC_CHANNELS.CLEAR_ALL),
+  pasteItem: (id) => electron.ipcRenderer.invoke(IPC_CHANNELS.PASTE_ITEM, id),
+  getSettings: () => electron.ipcRenderer.invoke(IPC_CHANNELS.GET_SETTINGS),
+  updateSetting: (key, value) => electron.ipcRenderer.invoke(IPC_CHANNELS.UPDATE_SETTING, key, value),
+  reorderItems: (activeId, overId) => electron.ipcRenderer.invoke(IPC_CHANNELS.REORDER_ITEMS, activeId, overId),
+  getAppPath: () => electron.ipcRenderer.invoke("get-app-path"),
+  onClipboardChanged: (callback) => {
+    const subscription = (_, data) => callback(data);
+    electron.ipcRenderer.on(IPC_CHANNELS.CLIPBOARD_CHANGED, subscription);
+    return () => {
+      electron.ipcRenderer.removeListener(IPC_CHANNELS.CLIPBOARD_CHANGED, subscription);
+    };
+  }
+});
