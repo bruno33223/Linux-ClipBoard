@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# Win-ClipBoard Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and efficient clipboard manager for Linux (compatible with Linux Mint and other distributions), built with Electron, React, TypeScript, and Vite. Inspired by Windows Clipboard History (`Win+V`).
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Complete History**: Stores text and images copied to the clipboard.
+- **Modern Interface**: "Card" style layout with support for **Light** and **Dark** themes.
+- **Powerful Organization**:
+  - **Categories**: Filter by "All", "Text", or "Images".
+  - **Search**: Quickly find what you copied.
+  - **Drag & Drop**: Reorder your items by dragging and dropping.
+  - **Pin Items**: Keep important items pinned to the top.
+- **Customization**:
+  - **Zoom** adjustment for the interface.
+  - Window positioning (follow the cursor).
+- **System Integration**:
+  - Runs in the background (System Tray).
+  - Single instance behavior (toggles window visibility when opened again).
 
-## React Compiler
+## 🛠️ Technologies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Electron](https://www.electronjs.org/)
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [dnd-kit](https://dndkit.com/) (Drag and Drop)
+- [lowdb](https://github.com/typicode/lowdb) (Local storage)
 
-## Expanding the ESLint configuration
+## 📦 How to Use
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/Win-ClipBoard.git
+   cd Win-ClipBoard
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Running in Development
+
+To start the application in development mode:
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Build (Production)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+To create the executable or package for distribution:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```
+
+This will generate files in the `dist-electron` or `release` folder (depending on builder configuration).
+
+## ⌨️ Setting up Global Shortcut (Linux)
+
+To open the manager with a keyboard shortcut (like `Super+V`), it is recommended to configure a native shortcut in your desktop environment (Cinnamon, GNOME, KDE, etc.):
+
+1. Go to **System Settings** > **Keyboard** > **Shortcuts**.
+2. Add a **Custom Shortcut**.
+3. In the command, place the path to the app executable (or `npm run dev` if in dev).
+4. Define the desired shortcut key (e.g., `Super+V`).
+
+*Note: The application uses a "Single Instance Lock" system. When attempting to open the app again via shortcut, it detects it is already running and simply toggles the window visibility, ensuring a fast response.*
+
+## 📝 License
+
+This project is under the MIT license.
