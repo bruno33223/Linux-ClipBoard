@@ -2,6 +2,8 @@
 
 A modern and efficient clipboard manager for Linux (compatible with Linux Mint and other distributions), built with Electron, React, TypeScript, and Vite. Inspired by Windows Clipboard History (`Win+V`).
 
+![Win-ClipBoard Screenshot](public/clipboard-image.png)
+
 ## 🚀 Features
 
 - **Complete History**: Stores text and images copied to the clipboard.
