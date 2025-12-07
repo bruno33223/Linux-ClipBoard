@@ -17,7 +17,7 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
 const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'icon.png')
+    ? path.join(__dirname, '../dist/icon.png')
     : path.join(__dirname, '../public/icon.png');
 
 let ignoreBlur = false;
@@ -59,7 +59,7 @@ const createWindow = async () => {
         mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
         // mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadURL('app://./index.html');
+        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
 
     // REMOVED: Internal Global Shortcut

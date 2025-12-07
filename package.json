@@ -51,6 +51,10 @@
   "build": {
     "appId": "com.bruno.clipboard-manager",
     "productName": "Win-ClipBoard",
+    "files": [
+      "dist",
+      "dist-electron"
+    ],
     "linux": {
       "target": [
         "AppImage"
