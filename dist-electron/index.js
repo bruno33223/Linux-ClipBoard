@@ -1,9 +1,43 @@
-import { app, ipcMain, BrowserWindow, clipboard, nativeImage, protocol, globalShortcut, Tray, Menu, screen } from "electron";
+import { app, clipboard, ipcMain, BrowserWindow, nativeImage, protocol, globalShortcut, Tray, Menu, screen } from "electron";
 import path, { join, dirname, basename } from "node:path";
 import "node:fs";
 import fs, { writeFile, rename, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { randomFillSync, randomUUID } from "node:crypto";
 import { exec } from "node:child_process";
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 256).toString(16).slice(1));
+}
+function unsafeStringify(arr, offset = 0) {
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+}
+const rnds8Pool = new Uint8Array(256);
+let poolPtr = rnds8Pool.length;
+function rng() {
+  if (poolPtr > rnds8Pool.length - 16) {
+    randomFillSync(rnds8Pool);
+    poolPtr = 0;
+  }
+  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+}
+const native = { randomUUID };
+function _v4(options, buf, offset) {
+  options = options || {};
+  const rnds = options.random ?? options.rng?.() ?? rng();
+  if (rnds.length < 16) {
+    throw new Error("Random bytes length must be >= 16");
+  }
+  rnds[6] = rnds[6] & 15 | 64;
+  rnds[8] = rnds[8] & 63 | 128;
+  return unsafeStringify(rnds);
+}
+function v4(options, buf, offset) {
+  if (native.randomUUID && true && !options) {
+    return native.randomUUID();
+  }
+  return _v4(options);
+}
 function getTempFilename(file) {
   const f = file instanceof URL ? fileURLToPath(file) : file.toString();
   return join(dirname(f), `.${basename(f)}.tmp`);
@@ -226,6 +260,22 @@ const imagesDir = path.join(app.getPath("userData"), "images");
     console.error("Failed to create images directory", e);
   }
 })();
+const saveImage = async (image) => {
+  const buffer = image.toPNG();
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+  const filePath = path.join(imagesDir, filename);
+  await fs.writeFile(filePath, buffer);
+  return filename;
+};
+const addClipboardItem = async (item) => {
+  await safeUpdate(({ history }) => {
+    if (history.length > 0 && history[0].content === item.content && history[0].type === item.type) {
+      return;
+    }
+    history.unshift(item);
+    if (history.length > 100) ;
+  });
+};
 const getHistory = async () => {
   const db = await getDb();
   return db.data.history;
@@ -293,7 +343,59 @@ const IPC_CHANNELS = {
   PASTE_ITEM: "paste-item",
   GET_SETTINGS: "get-settings",
   UPDATE_SETTING: "update-setting",
-  REORDER_ITEMS: "reorder-items"
+  REORDER_ITEMS: "reorder-items",
+  CLIPBOARD_CHANGED: "clipboard-changed"
+};
+let intervalId = null;
+let lastText = "";
+let lastImageDataUrl = "";
+const startClipboardWatcher = (win) => {
+  if (intervalId) return;
+  lastText = clipboard.readText();
+  const img = clipboard.readImage();
+  lastImageDataUrl = img.isEmpty() ? "" : img.toDataURL();
+  intervalId = setInterval(async () => {
+    const text = clipboard.readText();
+    const image = clipboard.readImage();
+    const imageDataUrl = image.isEmpty() ? "" : image.toDataURL();
+    if (text && text !== lastText) {
+      lastText = text;
+      const newItem = {
+        id: v4(),
+        type: "text",
+        content: text,
+        timestamp: Date.now(),
+        isPinned: false
+      };
+      await addClipboardItem(newItem);
+      const history = await getHistory();
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.CLIPBOARD_CHANGED, history);
+      }
+    } else if (!image.isEmpty() && imageDataUrl !== lastImageDataUrl) {
+      lastImageDataUrl = imageDataUrl;
+      const filename = await saveImage(image);
+      const newItem = {
+        id: v4(),
+        type: "image",
+        content: filename,
+        // Store filename/path
+        timestamp: Date.now(),
+        isPinned: false
+      };
+      await addClipboardItem(newItem);
+      const history = await getHistory();
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.CLIPBOARD_CHANGED, history);
+      }
+    }
+  }, 1e3);
+};
+const stopClipboardWatcher = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 };
 const registerIpcHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.GET_HISTORY, async () => {
@@ -491,6 +593,9 @@ if (!gotTheLock) {
     registerIpcHandlers();
     createTray();
     await createWindow();
+    if (mainWindow) {
+      startClipboardWatcher(mainWindow);
+    }
     if (app.isPackaged) {
       app.setLoginItemSettings({
         openAtLogin: true,
@@ -504,4 +609,5 @@ app.on("window-all-closed", () => {
 });
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
+  stopClipboardWatcher();
 });

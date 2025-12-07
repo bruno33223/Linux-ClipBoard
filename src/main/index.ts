@@ -196,6 +196,9 @@ if (!gotTheLock) {
         registerIpcHandlers();
         createTray();
         await createWindow();
+        if (mainWindow) {
+            startClipboardWatcher(mainWindow);
+        }
 
         // Auto-launch
         if (app.isPackaged) {
