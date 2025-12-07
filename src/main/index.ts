@@ -16,7 +16,9 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
-const iconPath = path.join(__dirname, '../public/icon.svg'); // Vite copies public to root dist/
+const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(__dirname, '../public/icon.png');
 
 let ignoreBlur = false;
 
@@ -156,17 +158,7 @@ const toggleWindow = async () => {
 };
 
 const createTray = () => {
-    // In dev, icon is in public. In prod, it's in root of dist (one level up from dist-electron? No, dist/assets)
-    // Let's rely on a reliable path or generate one.
-    // Use an empty image if fail, or try to load vite.svg
-    let iconPath = path.join(__dirname, '../renderer/vite.svg');
-    if (app.isPackaged) {
-        iconPath = path.join(process.resourcesPath, 'app.asar.unpacked/dist/vite.svg'); // This pathing is tricky in packed app
-        // simpler: just usage text based tray if image fails?
-        // nativeImage.createEmpty()
-    }
-
-    const icon = nativeImage.createFromPath(iconPath);
+    const icon = nativeImage.createFromPath(iconPath).resize({ width: 24, height: 24 });
     tray = new Tray(icon);
     const contextMenu = Menu.buildFromTemplate([
         { label: 'Show Clipboard', click: () => toggleWindow() },

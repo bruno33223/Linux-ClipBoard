@@ -468,7 +468,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 let mainWindow = null;
 let tray = null;
-const iconPath = path.join(__dirname$1, "../public/icon.svg");
+const iconPath = app.isPackaged ? path.join(process.resourcesPath, "icon.png") : path.join(__dirname$1, "../public/icon.png");
 let ignoreBlur = false;
 const createWindow = async () => {
   const settings = await getSettings().catch(() => null);
@@ -567,11 +567,7 @@ const toggleWindow = async () => {
   }
 };
 const createTray = () => {
-  let iconPath2 = path.join(__dirname$1, "../renderer/vite.svg");
-  if (app.isPackaged) {
-    iconPath2 = path.join(process.resourcesPath, "app.asar.unpacked/dist/vite.svg");
-  }
-  const icon = nativeImage.createFromPath(iconPath2);
+  const icon = nativeImage.createFromPath(iconPath).resize({ width: 24, height: 24 });
   tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
     { label: "Show Clipboard", click: () => toggleWindow() },

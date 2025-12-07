@@ -47,5 +47,16 @@
     "vite": "^7.2.4",
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.bruno.clipboard-manager",
+    "productName": "Win-ClipBoard",
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "public/icon.png",
+      "category": "Utility"
+    }
   }
 }
