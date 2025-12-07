@@ -416,8 +416,22 @@ const registerIpcHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.GET_SETTINGS, async () => {
     return await getSettings();
   });
-  ipcMain.handle(IPC_CHANNELS.UPDATE_SETTING, async (_, key, value) => {
-    return await updateSetting(key, value);
+  ipcMain.handle(IPC_CHANNELS.UPDATE_SETTING, async (event, key, value) => {
+    const result = await updateSetting(key, value);
+    if (key === "zoom") {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win) {
+        const zoom = Number(value);
+        const baseWidth = 400;
+        const baseHeight = 600;
+        const width = Math.round(baseWidth * (zoom / 100));
+        const height = Math.round(baseHeight * (zoom / 100));
+        win.setResizable(true);
+        win.setSize(width, height);
+        win.setResizable(false);
+      }
+    }
+    return result;
   });
   ipcMain.handle(IPC_CHANNELS.REORDER_ITEMS, async (_, activeId, overId) => {
     return await reorderItems(activeId, overId);
@@ -497,8 +511,10 @@ const createWindow = async () => {
   mainWindow.hide();
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.webContents.setZoomFactor(zoom / 100);
   } else {
     mainWindow.loadFile(path.join(__dirname$1, "../dist/index.html"));
+    mainWindow.webContents.setZoomFactor(zoom / 100);
   }
   mainWindow.on("blur", () => {
     if (ignoreBlur) {

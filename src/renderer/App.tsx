@@ -51,6 +51,17 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handleBlur = () => {
+      setIsSettingsOpen(false);
+    };
+
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
+
   const loadInitialData = async () => {
     const [data, currentSettings] = await Promise.all([
       window.electron.getHistory(),
@@ -127,7 +138,6 @@ function App() {
       className={`flex h-screen flex-col overflow-hidden text-white transition-colors
              ${settings.theme === 'light' ? 'bg-gray-100 text-gray-900' : 'bg-[#0f0f0f]'}
             `}
-      style={{ zoom: `${settings.zoom}%` }}
     >
       <Settings
         isOpen={isSettingsOpen}

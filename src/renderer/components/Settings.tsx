@@ -93,7 +93,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                         </div>
                         <input
                             type="range"
-                            min="50"
+                            min="70"
                             max="200"
                             step="10"
                             value={settings.zoom}
