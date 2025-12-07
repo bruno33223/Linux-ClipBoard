@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Board Gradient -->
+    <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#455A64;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#263238;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Metal Clip Gradient -->
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#90A4AE;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#CFD8DC;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ECEFF1;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#CFD8DC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#90A4AE;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Paper Gradient -->
+    <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feOffset in="blur" dx="0" dy="4" result="offsetBlur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="offsetBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Inner Shadow for Paper -->
+    <filter id="paperShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+      <feOffset dx="0" dy="1" result="offsetblur"/>
+      <feFlood flood-color="rgba(0,0,0,0.2)"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main Clipboard Board -->
+  <rect x="64" y="48" width="384" height="432" rx="32" ry="32" fill="url(#boardGrad)" filter="url(#shadow)" stroke="#263238" stroke-width="2"/>
+
+  <!-- Paper Stack Effect (Bottom Sheet) -->
+  <rect x="104" y="110" width="304" height="340" rx="4" ry="4" fill="#E0E0E0" transform="rotate(-1, 256, 256)" />
+
+  <!-- Main Paper Sheet -->
+  <rect x="96" y="100" width="320" height="350" rx="6" ry="6" fill="url(#paperGrad)" filter="url(#paperShadow)" />
+
+  <!-- Content Lines on Paper -->
+  <!-- Header Line (Active Item) -->
+  <rect x="136" y="150" width="240" height="20" rx="10" fill="#4FC3F7" />
+  
+  <!-- Body Lines -->
+  <rect x="136" y="190" width="200" height="16" rx="8" fill="#B0BEC5" />
+  <rect x="136" y="226" width="240" height="16" rx="8" fill="#CFD8DC" />
+  <rect x="136" y="262" width="220" height="16" rx="8" fill="#CFD8DC" />
+  <rect x="136" y="298" width="180" height="16" rx="8" fill="#CFD8DC" />
+  <rect x="136" y="334" width="240" height="16" rx="8" fill="#CFD8DC" />
+  <rect x="136" y="370" width="160" height="16" rx="8" fill="#CFD8DC" />
+
+  <!-- Clip Mechanism -->
+  <g filter="url(#shadow)">
+    <!-- Metal Plate Backing -->
+    <path d="M144,40 L368,40 C376.8,40 384,47.2 384,56 L384,112 C384,120.8 376.8,128 368,128 L144,128 C135.2,128 128,120.8 128,112 L128,56 C128,47.2 135.2,40 144,40 Z" fill="url(#metalGrad)" />
+    
+    <!-- Dark Grip Area -->
+    <rect x="152" y="96" width="208" height="20" rx="4" fill="#546E7A" />
+    
+    <!-- Top Hinge/Loop -->
+    <path d="M224,40 L224,24 C224,15.2 231.2,8 240,8 L272,8 C280.8,8 288,15.2 288,24 L288,40" fill="none" stroke="url(#metalGrad)" stroke-width="16" stroke-linecap="round" />
+    
+    <!-- Rivets -->
+    <circle cx="148" cy="60" r="6" fill="#78909C" />
+    <circle cx="364" cy="60" r="6" fill="#78909C" />
+  </g>
+
+</svg>
