@@ -456,10 +456,10 @@ const toggleWindow = async () => {
     }
     mainWindow.focus();
     setTimeout(() => {
-      if (!mainWindow.isVisible()) {
+      if (!mainWindow?.isVisible()) {
         console.log("[Toggle] Retry showing window...");
-        mainWindow.show();
-        mainWindow.focus();
+        mainWindow?.show();
+        mainWindow?.focus();
       }
     }, 100);
   }

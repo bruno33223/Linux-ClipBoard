@@ -146,10 +146,10 @@ const toggleWindow = async () => {
 
         // Hack: Check if it actually became visible, if not, try force showing again
         setTimeout(() => {
-            if (!mainWindow.isVisible()) {
+            if (!mainWindow?.isVisible()) {
                 console.log('[Toggle] Retry showing window...');
-                mainWindow.show();
-                mainWindow.focus();
+                mainWindow?.show();
+                mainWindow?.focus();
             }
         }, 100);
     }
