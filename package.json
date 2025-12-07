@@ -1,9 +1,25 @@
 {
-  "name": "clipboard-manager",
+  "name": "linux-clipboard",
   "private": true,
   "version": "0.0.0",
-  "description": "Clipboard Manager for Linux Mint",
-  "author": "Bruno",
+  "description": "A modern, efficient, and visual clipboard manager for Linux Mint and other distributions. Features text and image history, categorization, drag-and-drop, and system tray integration.",
+  "keywords": [
+    "clipboard",
+    "manager",
+    "linux",
+    "electron",
+    "react",
+    "productivity",
+    "history",
+    "copy-paste",
+    "linux-mint",
+    "utility"
+  ],
+  "author": "Bruno33223",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bruno33223/Linux-Clipboard.git"
+  },
   "type": "module",
   "main": "dist-electron/index.js",
   "scripts": {
