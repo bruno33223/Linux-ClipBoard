@@ -108,6 +108,6 @@ export const registerIpcHandlers = () => {
                     console.error("Failed to write image to clipboard", e);
                 }
             }
-        }, 500); // Increased to 500ms for testing
+        }, 100); // Reduced to 100ms for better responsiveness
     });
 };

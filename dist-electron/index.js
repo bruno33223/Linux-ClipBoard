@@ -479,7 +479,7 @@ const registerIpcHandlers = () => {
           console.error("Failed to write image to clipboard", e);
         }
       }
-    }, 500);
+    }, 100);
   });
 };
 const __filename$1 = fileURLToPath(import.meta.url);
