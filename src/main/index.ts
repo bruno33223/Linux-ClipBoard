@@ -42,7 +42,7 @@ const createWindow = async () => {
         alwaysOnTop: true,
         transparent: true,
         skipTaskbar: true,
-        type: 'dialog',
+        type: 'utility',
         icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
@@ -51,8 +51,10 @@ const createWindow = async () => {
         },
     });
 
-    // Default hiding
-    mainWindow.hide();
+    // Initial hiding
+    // mainWindow.hide() is not enough due to taskbar issues?
+    // Let's start minimized.
+    mainWindow.minimize();
 
     // Serve development or production
     if (process.env.VITE_DEV_SERVER_URL) {
@@ -83,79 +85,85 @@ const createWindow = async () => {
         }
 
         if (mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
-            console.log('[Window] Blur event triggered. Hiding.');
-            mainWindow.hide();
+            if (!mainWindow.isMinimized()) {
+                console.log('[Window] Blur event triggered. Hiding.');
+                hideWindow();
+            }
         }
     });
+};
+
+const hideWindow = () => {
+    if (!mainWindow) return;
+    mainWindow.minimize();
+};
+
+const showWindow = async () => {
+    if (!mainWindow) return;
+
+    const settings = await getSettings();
+
+    // Restore first to ensure we can manipulate it
+    mainWindow.restore();
+
+    // Ensure availability
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+    // Update size
+    if (settings && settings.zoom) {
+        const baseWidth = 400;
+        const baseHeight = 600;
+        const width = Math.round(baseWidth * (settings.zoom / 100));
+        const height = Math.round(baseHeight * (settings.zoom / 100));
+        if (mainWindow.getBounds().width !== width || mainWindow.getBounds().height !== height) {
+            mainWindow.setSize(width, height);
+        }
+    }
+
+    if (settings && settings.position === 'cursor') {
+        const { x, y } = screen.getCursorScreenPoint();
+        const display = screen.getDisplayNearestPoint({ x, y });
+        const winBounds = mainWindow.getBounds();
+
+        let newX = x;
+        let newY = y;
+
+        // Keep in bounds
+        if (newX + winBounds.width > display.bounds.x + display.bounds.width) {
+            newX = display.bounds.x + display.bounds.width - winBounds.width;
+        }
+        if (newY + winBounds.height > display.bounds.y + display.bounds.height) {
+            newY = display.bounds.y + display.bounds.height - winBounds.height;
+        }
+
+        mainWindow.setPosition(newX, newY);
+    } else if (settings && settings.position === 'fixed') {
+        // Optionally handle fixed position if stored
+        // mainWindow.setPosition(x, y);
+    } else {
+        mainWindow.center();
+    }
+
+    // Make visible and focused
+    mainWindow.setSkipTaskbar(true);
+    mainWindow.focus();
 };
 
 const toggleWindow = async () => {
     if (!mainWindow) return;
 
-    const isVisible = mainWindow.isVisible();
-    const isFocused = mainWindow.isFocused();
-    console.log(`[Toggle] Triggered. Visible: ${isVisible}, Focused: ${isFocused}`);
+    // Check visibility logic
+    const isMinimized = mainWindow.isMinimized();
+    const isVisible = mainWindow.isVisible() && !isMinimized && mainWindow.isFocused();
 
-    if (isVisible && isFocused) {
-        console.log('[Toggle] Hiding window');
-        mainWindow.hide();
+    if (isVisible) {
+        hideWindow();
     } else {
-        console.log('[Toggle] Showing window');
-
-        // Block blur events for a short time to prevent immediate hiding/focus loss issues
+        // Block blur events for a short time
         ignoreBlur = true;
         setTimeout(() => { ignoreBlur = false; }, 300);
-
-        const settings = await getSettings();
-
-        // Ensure availability
-        mainWindow.setAlwaysOnTop(true);
-        mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-        // Update size
-        if (settings && settings.zoom) {
-            const baseWidth = 400;
-            const baseHeight = 600;
-            const width = Math.round(baseWidth * (settings.zoom / 100));
-            const height = Math.round(baseHeight * (settings.zoom / 100));
-            if (mainWindow.getBounds().width !== width || mainWindow.getBounds().height !== height) {
-                mainWindow.setSize(width, height);
-            }
-        }
-
-
-        if (settings && settings.position === 'cursor') {
-            const { x, y } = screen.getCursorScreenPoint();
-            const display = screen.getDisplayNearestPoint({ x, y });
-            const winBounds = mainWindow.getBounds();
-
-            let newX = x;
-            let newY = y;
-
-            // Keep in bounds
-            if (newX + winBounds.width > display.bounds.x + display.bounds.width) {
-                newX = display.bounds.x + display.bounds.width - winBounds.width;
-            }
-            if (newY + winBounds.height > display.bounds.y + display.bounds.height) {
-                newY = display.bounds.y + display.bounds.height - winBounds.height;
-            }
-
-            mainWindow.setPosition(newX, newY);
-        }
-
-        if (!isVisible) {
-            mainWindow.show();
-        }
-        mainWindow.focus();
-
-        // Hack: Check if it actually became visible, if not, try force showing again
-        setTimeout(() => {
-            if (!mainWindow?.isVisible()) {
-                console.log('[Toggle] Retry showing window...');
-                mainWindow?.show();
-                mainWindow?.focus();
-            }
-        }, 100);
+        await showWindow();
     }
 };
 

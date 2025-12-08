@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electron', {
     getSettings: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SETTINGS),
     updateSetting: (key: string, value: any) => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_SETTING, key, value),
     reorderItems: (activeId: string, overId: string) => ipcRenderer.invoke(IPC_CHANNELS.REORDER_ITEMS, activeId, overId),
+    hideWindow: () => ipcRenderer.invoke(IPC_CHANNELS.HIDE_WINDOW),
     getAppPath: () => ipcRenderer.invoke('get-app-path'),
     onClipboardChanged: (callback: (data: ClipboardItem[]) => void) => {
         const subscription = (_: unknown, data: ClipboardItem[]) => callback(data);

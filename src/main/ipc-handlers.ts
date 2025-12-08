@@ -61,6 +61,11 @@ export const registerIpcHandlers = () => {
         return await reorderItems(activeId, overId);
     });
 
+    ipcMain.handle(IPC_CHANNELS.HIDE_WINDOW, (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        win?.minimize();
+    });
+
     ipcMain.handle('get-app-path', () => {
         if (app.isPackaged) {
             return process.execPath;
@@ -79,8 +84,9 @@ export const registerIpcHandlers = () => {
         }
 
         // Hide window FIRST to return focus to previous app
+        // Hide window FIRST to return focus to previous app
         const win = BrowserWindow.fromWebContents(event.sender);
-        win?.hide();
+        win?.minimize();
 
         // Small delay to ensure focus has switched
         setTimeout(() => {

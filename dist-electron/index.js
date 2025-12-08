@@ -344,7 +344,8 @@ const IPC_CHANNELS = {
   GET_SETTINGS: "get-settings",
   UPDATE_SETTING: "update-setting",
   REORDER_ITEMS: "reorder-items",
-  CLIPBOARD_CHANGED: "clipboard-changed"
+  CLIPBOARD_CHANGED: "clipboard-changed",
+  HIDE_WINDOW: "hide-window"
 };
 let intervalId = null;
 let lastText = "";
@@ -426,15 +427,22 @@ const registerIpcHandlers = () => {
         const baseHeight = 600;
         const width = Math.round(baseWidth * (zoom / 100));
         const height = Math.round(baseHeight * (zoom / 100));
+        win.webContents.setZoomFactor(zoom / 100);
         win.setResizable(true);
         win.setSize(width, height);
-        win.setResizable(false);
+        setTimeout(() => {
+          win.setResizable(false);
+        }, 100);
       }
     }
     return result;
   });
   ipcMain.handle(IPC_CHANNELS.REORDER_ITEMS, async (_, activeId, overId) => {
     return await reorderItems(activeId, overId);
+  });
+  ipcMain.handle(IPC_CHANNELS.HIDE_WINDOW, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    win?.minimize();
   });
   ipcMain.handle("get-app-path", () => {
     if (app.isPackaged) {
@@ -451,7 +459,7 @@ const registerIpcHandlers = () => {
       return;
     }
     const win = BrowserWindow.fromWebContents(event.sender);
-    win?.hide();
+    win?.minimize();
     setTimeout(() => {
       if (item.type === "text") {
         clipboard.writeText(item.content);
@@ -500,7 +508,7 @@ const createWindow = async () => {
     alwaysOnTop: true,
     transparent: true,
     skipTaskbar: true,
-    type: "dialog",
+    type: "utility",
     icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname$1, "preload.cjs"),
@@ -508,7 +516,7 @@ const createWindow = async () => {
       contextIsolation: true
     }
   });
-  mainWindow.hide();
+  mainWindow.minimize();
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     mainWindow.webContents.setZoomFactor(zoom / 100);
@@ -522,62 +530,64 @@ const createWindow = async () => {
       return;
     }
     if (mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
-      console.log("[Window] Blur event triggered. Hiding.");
-      mainWindow.hide();
+      if (!mainWindow.isMinimized()) {
+        console.log("[Window] Blur event triggered. Hiding.");
+        hideWindow();
+      }
     }
   });
 };
+const hideWindow = () => {
+  if (!mainWindow) return;
+  mainWindow.minimize();
+};
+const showWindow = async () => {
+  if (!mainWindow) return;
+  const settings = await getSettings();
+  mainWindow.restore();
+  mainWindow.setAlwaysOnTop(true);
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  if (settings && settings.zoom) {
+    const baseWidth = 400;
+    const baseHeight = 600;
+    const width = Math.round(baseWidth * (settings.zoom / 100));
+    const height = Math.round(baseHeight * (settings.zoom / 100));
+    if (mainWindow.getBounds().width !== width || mainWindow.getBounds().height !== height) {
+      mainWindow.setSize(width, height);
+    }
+  }
+  if (settings && settings.position === "cursor") {
+    const { x, y } = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint({ x, y });
+    const winBounds = mainWindow.getBounds();
+    let newX = x;
+    let newY = y;
+    if (newX + winBounds.width > display.bounds.x + display.bounds.width) {
+      newX = display.bounds.x + display.bounds.width - winBounds.width;
+    }
+    if (newY + winBounds.height > display.bounds.y + display.bounds.height) {
+      newY = display.bounds.y + display.bounds.height - winBounds.height;
+    }
+    mainWindow.setPosition(newX, newY);
+  } else if (settings && settings.position === "fixed") ;
+  else {
+    mainWindow.center();
+  }
+  mainWindow.setSkipTaskbar(true);
+  mainWindow.focus();
+};
 const toggleWindow = async () => {
   if (!mainWindow) return;
-  const isVisible = mainWindow.isVisible();
-  const isFocused = mainWindow.isFocused();
-  console.log(`[Toggle] Triggered. Visible: ${isVisible}, Focused: ${isFocused}`);
-  if (isVisible && isFocused) {
-    console.log("[Toggle] Hiding window");
-    mainWindow.hide();
+  const isMinimized = mainWindow.isMinimized();
+  const isVisible = mainWindow.isVisible() && !isMinimized && mainWindow.isFocused();
+  if (isVisible) {
+    hideWindow();
   } else {
-    console.log("[Toggle] Showing window");
     ignoreBlur = true;
     setTimeout(() => {
       ignoreBlur = false;
     }, 300);
-    const settings = await getSettings();
-    mainWindow.setAlwaysOnTop(true);
-    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    if (settings && settings.zoom) {
-      const baseWidth = 400;
-      const baseHeight = 600;
-      const width = Math.round(baseWidth * (settings.zoom / 100));
-      const height = Math.round(baseHeight * (settings.zoom / 100));
-      if (mainWindow.getBounds().width !== width || mainWindow.getBounds().height !== height) {
-        mainWindow.setSize(width, height);
-      }
-    }
-    if (settings && settings.position === "cursor") {
-      const { x, y } = screen.getCursorScreenPoint();
-      const display = screen.getDisplayNearestPoint({ x, y });
-      const winBounds = mainWindow.getBounds();
-      let newX = x;
-      let newY = y;
-      if (newX + winBounds.width > display.bounds.x + display.bounds.width) {
-        newX = display.bounds.x + display.bounds.width - winBounds.width;
-      }
-      if (newY + winBounds.height > display.bounds.y + display.bounds.height) {
-        newY = display.bounds.y + display.bounds.height - winBounds.height;
-      }
-      mainWindow.setPosition(newX, newY);
-    }
-    if (!isVisible) {
-      mainWindow.show();
-    }
-    mainWindow.focus();
-    setTimeout(() => {
-      if (!mainWindow?.isVisible()) {
-        console.log("[Toggle] Retry showing window...");
-        mainWindow?.show();
-        mainWindow?.focus();
-      }
-    }, 100);
+    await showWindow();
   }
 };
 const createTray = () => {
