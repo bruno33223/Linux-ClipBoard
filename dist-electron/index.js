@@ -346,11 +346,16 @@ const IPC_CHANNELS = {
   UPDATE_SETTING: "update-setting",
   REORDER_ITEMS: "reorder-items",
   CLIPBOARD_CHANGED: "clipboard-changed",
-  HIDE_WINDOW: "hide-window"
+  HIDE_WINDOW: "hide-window",
+  PASTE_CONTENT: "paste-content"
 };
 let intervalId = null;
 let lastText = "";
 let lastImageDataUrl = "";
+let ignoreText = null;
+const setIgnoreText = (text) => {
+  ignoreText = text;
+};
 const startClipboardWatcher = (win) => {
   if (intervalId) return;
   lastText = clipboard.readText();
@@ -361,6 +366,11 @@ const startClipboardWatcher = (win) => {
     const image = clipboard.readImage();
     const imageDataUrl = image.isEmpty() ? "" : image.toDataURL();
     if (text && text !== lastText) {
+      if (ignoreText && text === ignoreText) {
+        lastText = text;
+        ignoreText = null;
+        return;
+      }
       lastText = text;
       const newItem = {
         id: v4(),
@@ -479,6 +489,17 @@ const registerIpcHandlers = () => {
           console.error("Failed to write image to clipboard", e);
         }
       }
+    }, 10);
+  });
+  ipcMain.handle(IPC_CHANNELS.PASTE_CONTENT, (event, content) => {
+    setIgnoreText(content);
+    clipboard.writeText(content);
+    const win = BrowserWindow.fromWebContents(event.sender);
+    win?.minimize();
+    setTimeout(() => {
+      exec("xdotool key --clearmodifiers ctrl+v", (error) => {
+        if (error) console.error("Failed to paste content:", error);
+      });
     }, 100);
   });
 };

@@ -7,6 +7,11 @@ import { BrowserWindow } from 'electron';
 let intervalId: NodeJS.Timeout | null = null;
 let lastText = '';
 let lastImageDataUrl = '';
+let ignoreText: string | null = null;
+
+export const setIgnoreText = (text: string) => {
+    ignoreText = text;
+};
 
 export const startClipboardWatcher = (win: BrowserWindow) => {
     if (intervalId) return;
@@ -21,6 +26,13 @@ export const startClipboardWatcher = (win: BrowserWindow) => {
         const imageDataUrl = image.isEmpty() ? '' : image.toDataURL();
 
         if (text && text !== lastText) {
+            // Bypass logic
+            if (ignoreText && text === ignoreText) {
+                lastText = text;
+                ignoreText = null;
+                return;
+            }
+
             lastText = text;
             const newItem = {
                 id: uuidv4(),

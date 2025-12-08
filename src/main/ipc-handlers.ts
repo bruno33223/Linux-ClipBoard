@@ -1,4 +1,5 @@
 import { ipcMain, clipboard, nativeImage, app, BrowserWindow } from 'electron';
+import { startClipboardWatcher, setIgnoreText } from './clipboard-watcher';
 import { IPC_CHANNELS, Settings } from '../shared/types';
 import { getHistory, deleteItem, togglePin, clearAll, getDb, getSettings, updateSetting, imagesDir, reorderItems } from './store';
 import { exec } from 'node:child_process';
@@ -108,6 +109,25 @@ export const registerIpcHandlers = () => {
                     console.error("Failed to write image to clipboard", e);
                 }
             }
-        }, 100); // Reduced to 100ms for better responsiveness
+        }, 10); // Reduced to 10ms for better responsiveness
+    });
+
+    ipcMain.handle(IPC_CHANNELS.PASTE_CONTENT, (event, content: string) => {
+        // 1. Ignore this content in watcher
+        setIgnoreText(content);
+
+        // 2. Write content to clipboard
+        clipboard.writeText(content);
+
+        // 3. Hide window to focus previous app
+        const win = BrowserWindow.fromWebContents(event.sender);
+        win?.minimize();
+
+        // 4. Simulate Paste
+        setTimeout(() => {
+            exec('xdotool key --clearmodifiers ctrl+v', (error) => {
+                if (error) console.error('Failed to paste content:', error);
+            });
+        }, 100);
     });
 };

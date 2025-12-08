@@ -10,7 +10,8 @@ const IPC_CHANNELS = {
   UPDATE_SETTING: "update-setting",
   REORDER_ITEMS: "reorder-items",
   CLIPBOARD_CHANGED: "clipboard-changed",
-  HIDE_WINDOW: "hide-window"
+  HIDE_WINDOW: "hide-window",
+  PASTE_CONTENT: "paste-content"
 };
 electron.contextBridge.exposeInMainWorld("electron", {
   getHistory: () => electron.ipcRenderer.invoke(IPC_CHANNELS.GET_HISTORY),
@@ -22,6 +23,7 @@ electron.contextBridge.exposeInMainWorld("electron", {
   updateSetting: (key, value) => electron.ipcRenderer.invoke(IPC_CHANNELS.UPDATE_SETTING, key, value),
   reorderItems: (activeId, overId) => electron.ipcRenderer.invoke(IPC_CHANNELS.REORDER_ITEMS, activeId, overId),
   hideWindow: () => electron.ipcRenderer.invoke(IPC_CHANNELS.HIDE_WINDOW),
+  pasteContent: (content) => electron.ipcRenderer.invoke(IPC_CHANNELS.PASTE_CONTENT, content),
   getAppPath: () => electron.ipcRenderer.invoke("get-app-path"),
   onClipboardChanged: (callback) => {
     const subscription = (_, data) => callback(data);

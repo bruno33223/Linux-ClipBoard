@@ -40,6 +40,25 @@ export const translations = {
             clearAll: 'Clear All',
             settings: 'Settings'
         },
+        typeNav: {
+            clipboard: 'Clipboard',
+            emojis: 'Emojis',
+            symbols: 'Symbols'
+        },
+        emojiCategories: {
+            recent: 'Recent',
+            common: 'Common',
+            hands: 'Hands',
+            faces: 'Faces',
+            objects: 'Objects/Symbols'
+        },
+        symbolCategories: {
+            math: 'Math',
+            currency: 'Currency',
+            arrows: 'Arrows',
+            punctuation: 'Punctuation & Layout',
+            shapes: 'Shapes'
+        },
         footer: 'powered by: Bruno33223'
     },
     'pt-BR': {
@@ -80,6 +99,25 @@ export const translations = {
             delete: 'Excluir',
             clearAll: 'Limpar Tudo',
             settings: 'Configurações'
+        },
+        typeNav: {
+            clipboard: 'Clipboard',
+            emojis: 'Emojis',
+            symbols: 'Símbolos'
+        },
+        emojiCategories: {
+            recent: 'Recentes',
+            common: 'Comum',
+            hands: 'Mãos',
+            faces: 'Rostos',
+            objects: 'Objetos/Símbolos'
+        },
+        symbolCategories: {
+            math: 'Matemática',
+            currency: 'Moeda',
+            arrows: 'Setas',
+            punctuation: 'Pontuação e Layout',
+            shapes: 'Formas'
         },
         footer: 'desenvolvido por: Bruno33223'
     }

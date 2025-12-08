@@ -21,7 +21,8 @@ export const IPC_CHANNELS = {
     UPDATE_SETTING: 'update-setting',
     REORDER_ITEMS: 'reorder-items',
     CLIPBOARD_CHANGED: 'clipboard-changed',
-    HIDE_WINDOW: 'hide-window'
+    HIDE_WINDOW: 'hide-window',
+    PASTE_CONTENT: 'paste-content'
 } as const;
 
 export interface Settings {

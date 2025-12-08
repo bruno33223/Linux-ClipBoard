@@ -11,6 +11,7 @@ export interface ElectronAPI {
     reorderItems: (activeId: string, overId: string) => Promise<void>;
     getAppPath: () => Promise<string>;
     hideWindow: () => Promise<void>;
+    pasteContent: (content: string) => Promise<void>;
     onClipboardChanged: (callback: (history: ClipboardItem[]) => void) => () => void;
 }
 
