@@ -143,11 +143,11 @@ function App() {
         (item.type === 'image' && 'image'.includes(lowerQuery))
       );
     }
-    if (settings.grouping === 'categorized' && activeTab !== 'all') {
+    if (activeTab !== 'all') {
       data = data.filter(item => item.type === activeTab);
     }
     return data;
-  }, [history, searchQuery, settings.grouping, activeTab]);
+  }, [history, searchQuery, activeTab]);
 
   return (
     <div
@@ -204,27 +204,25 @@ function App() {
           />
         </div>
 
-        {settings.grouping === 'categorized' && (
-          <div className="flex rounded-lg bg-black/10 p-1">
-            {[
-              { id: 'all', label: 'All', icon: Grid },
-              { id: 'text', label: 'Text', icon: Type },
-              { id: 'image', label: 'Images', icon: ImageIcon },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-black/5 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
-                  }`}
-              >
-                <tab.icon size={12} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex rounded-lg bg-black/10 p-1">
+          {[
+            { id: 'all', label: 'All', icon: Grid },
+            { id: 'text', label: 'Text', icon: Type },
+            { id: 'image', label: 'Images', icon: ImageIcon },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all ${activeTab === tab.id
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-black/5 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+                }`}
+            >
+              <tab.icon size={12} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* List */}

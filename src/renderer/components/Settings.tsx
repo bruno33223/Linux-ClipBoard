@@ -66,32 +66,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                         </div>
                     </div>
 
-                    {/* Grouping */}
-                    <div className="space-y-3">
-                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
-                            <Layers size={16} /> Organização das Abas
-                        </label>
-                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
-                            <button
-                                onClick={() => onUpdate('grouping', 'combined')}
-                                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.grouping === 'combined'
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : inactiveText
-                                    }`}
-                            >
-                                Tudo Junto
-                            </button>
-                            <button
-                                onClick={() => onUpdate('grouping', 'categorized')}
-                                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.grouping === 'categorized'
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : inactiveText
-                                    }`}
-                            >
-                                Categorias
-                            </button>
-                        </div>
-                    </div>
+
 
                     {/* Zoom */}
                     <div className="space-y-3">

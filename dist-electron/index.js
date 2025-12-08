@@ -207,7 +207,7 @@ const defaultData = {
   settings: {
     position: "cursor",
     // Default to cursor as per user request
-    grouping: "combined",
+    grouping: "categorized",
     zoom: 100,
     theme: "dark"
     // Assuming dark theme default
