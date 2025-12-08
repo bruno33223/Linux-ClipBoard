@@ -18,28 +18,38 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
 
     if (!isOpen) return null;
 
+    const isLight = settings.theme === 'light';
+    const bgColor = isLight ? 'bg-white' : 'bg-[#1e1e1e]';
+    const textColor = isLight ? 'text-gray-900' : 'text-white';
+    const secondaryText = isLight ? 'text-gray-600' : 'text-white/70';
+    const borderColor = isLight ? 'border-gray-200' : 'border-white/5';
+    const inputBg = isLight ? 'bg-gray-100' : 'bg-black/20';
+    const inactiveText = isLight ? 'text-gray-500 hover:text-gray-900' : 'text-white/50 hover:text-white';
+    const closeBtnHover = isLight ? 'hover:bg-gray-100' : 'hover:bg-white/10';
+    const closeBtnIcon = isLight ? 'text-gray-500' : 'text-white/70';
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="flex w-full max-w-sm flex-col rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl max-h-[90vh]">
-                <div className="flex items-center justify-between border-b border-white/5 p-4">
-                    <h2 className="text-lg font-bold text-white">Configurações</h2>
-                    <button onClick={onClose} className="rounded-full p-1 hover:bg-white/10">
-                        <X size={20} className="text-white/70" />
+            <div className={`flex w-full max-w-sm flex-col rounded-xl border shadow-2xl max-h-[90vh] ${bgColor} ${isLight ? 'border-gray-200' : 'border-white/10'}`}>
+                <div className={`flex items-center justify-between border-b p-4 ${borderColor}`}>
+                    <h2 className={`text-lg font-bold ${textColor}`}>Configurações</h2>
+                    <button onClick={onClose} className={`rounded-full p-1 ${closeBtnHover}`}>
+                        <X size={20} className={closeBtnIcon} />
                     </button>
                 </div>
 
                 <div className="flex-1 space-y-6 overflow-y-auto p-4 scrollbar-hide">
                     {/* Position */}
                     <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
                             <Monitor size={16} /> Posição da Janela
                         </label>
-                        <div className="flex rounded-lg bg-black/20 p-1">
+                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
                             <button
                                 onClick={() => onUpdate('position', 'fixed')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.position === 'fixed'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Fixa
@@ -48,7 +58,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                                 onClick={() => onUpdate('position', 'cursor')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.position === 'cursor'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Mouse
@@ -58,15 +68,15 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
 
                     {/* Grouping */}
                     <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
                             <Layers size={16} /> Organização das Abas
                         </label>
-                        <div className="flex rounded-lg bg-black/20 p-1">
+                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
                             <button
                                 onClick={() => onUpdate('grouping', 'combined')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.grouping === 'combined'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Tudo Junto
@@ -75,7 +85,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                                 onClick={() => onUpdate('grouping', 'categorized')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.grouping === 'categorized'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Categorias
@@ -86,10 +96,10 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                     {/* Zoom */}
                     <div className="space-y-3">
                         <div className="flex justify-between">
-                            <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                            <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
                                 <ZoomIn size={16} /> Tamanho (Zoom)
                             </label>
-                            <span className="text-xs text-white/50">{settings.zoom}%</span>
+                            <span className={`text-xs ${isLight ? 'text-gray-500' : 'text-white/50'}`}>{settings.zoom}%</span>
                         </div>
                         <input
                             type="range"
@@ -98,29 +108,29 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                             step="10"
                             value={settings.zoom}
                             onChange={(e) => onUpdate('zoom', Number(e.target.value))}
-                            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-black/20 accent-blue-600"
+                            className={`h-2 w-full cursor-pointer appearance-none rounded-lg accent-blue-600 ${inputBg}`}
                         />
                     </div>
 
                     {/* Shortcuts */}
                     <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
                             <Keyboard size={16} /> Atalho de Teclado
                         </label>
-                        <div className="rounded-lg bg-black/20 p-3 text-sm text-white/80">
-                            <p className="mb-2 text-xs text-white/50">
+                        <div className={`rounded-lg p-3 text-sm ${inputBg} ${isLight ? 'text-gray-700' : 'text-white/80'}`}>
+                            <p className={`mb-2 text-xs ${isLight ? 'text-gray-500' : 'text-white/50'}`}>
                                 Para abrir o app com uma tecla (ex: Super+V), crie um atalho no seu sistema Linux:
                             </p>
-                            <ol className="list-decimal space-y-1 pl-4 text-xs text-white/60">
+                            <ol className={`list-decimal space-y-1 pl-4 text-xs ${isLight ? 'text-gray-600' : 'text-white/60'}`}>
                                 <li>Vá em <strong>Configurações &gt; Teclado &gt; Atalhos</strong></li>
                                 <li>Adicione um atalho personalizado</li>
                                 <li>Nome: <strong>Clipboard</strong></li>
                                 <li>Comando:</li>
                             </ol>
-                            <div className="mt-2 flex items-center gap-2 rounded bg-black/30 p-2 font-mono text-xs text-blue-300">
+                            <div className={`mt-2 flex items-center gap-2 rounded p-2 font-mono text-xs text-blue-300 ${isLight ? 'bg-white border border-gray-200 text-blue-600' : 'bg-black/30'}`}>
                                 <span className="flex-1 truncate select-all">{appPath}</span>
                                 <button
-                                    className="text-white/30 hover:text-white"
+                                    className={`${isLight ? 'text-gray-400 hover:text-gray-600' : 'text-white/30 hover:text-white'}`}
                                     onClick={() => navigator.clipboard.writeText(appPath)}
                                     title="Copiar comando"
                                 >
@@ -132,15 +142,15 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
 
                     {/* Theme */}
                     <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
                             <Sun size={16} /> Tema
                         </label>
-                        <div className="flex rounded-lg bg-black/20 p-1">
+                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
                             <button
                                 onClick={() => onUpdate('theme', 'dark')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.theme === 'dark'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Escuro
@@ -149,7 +159,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                                 onClick={() => onUpdate('theme', 'light')}
                                 className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.theme === 'light'
                                     ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-white/50 hover:text-white'
+                                    : inactiveText
                                     }`}
                             >
                                 Claro
@@ -158,7 +168,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate }: SettingsProps)
                     </div>
                 </div>
 
-                <div className="border-t border-white/5 p-4 text-center text-xs text-white/30">
+                <div className={`border-t p-4 text-center text-xs ${borderColor} ${isLight ? 'text-gray-400' : 'text-white/30'}`}>
                     Feche para salvar e aplicar.
                 </div>
             </div>
