@@ -195,6 +195,17 @@ if (!gotTheLock) {
 
     // Create window when ready
     app.whenReady().then(async () => {
+        // Register protocol handler for images
+        protocol.handle('app', (request) => {
+            const url = request.url;
+            if (url.includes('/images/')) {
+                const filename = url.split('/images/')[1];
+                const filePath = path.join(imagesDir, filename);
+                return net.fetch(pathToFileURL(filePath).toString());
+            }
+            return new Response('Not Found', { status: 404 });
+        });
+
         registerIpcHandlers();
         createTray();
         await createWindow();

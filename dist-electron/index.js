@@ -1,8 +1,8 @@
-import { app, clipboard, ipcMain, BrowserWindow, nativeImage, protocol, globalShortcut, Tray, Menu, screen } from "electron";
+import { app, clipboard, ipcMain, BrowserWindow, nativeImage, protocol, net, globalShortcut, Tray, Menu, screen } from "electron";
 import path, { join, dirname, basename } from "node:path";
 import "node:fs";
 import fs, { writeFile, rename, readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { randomFillSync, randomUUID } from "node:crypto";
 import { exec } from "node:child_process";
 const byteToHex = [];
@@ -610,6 +610,15 @@ if (!gotTheLock) {
     toggleWindow();
   });
   app.whenReady().then(async () => {
+    protocol.handle("app", (request) => {
+      const url = request.url;
+      if (url.includes("/images/")) {
+        const filename = url.split("/images/")[1];
+        const filePath = path.join(imagesDir, filename);
+        return net.fetch(pathToFileURL(filePath).toString());
+      }
+      return new Response("Not Found", { status: 404 });
+    });
     registerIpcHandlers();
     createTray();
     await createWindow();

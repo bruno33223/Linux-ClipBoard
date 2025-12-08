@@ -73,7 +73,8 @@
     ],
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "snap"
       ],
       "icon": "public/icon.png",
       "category": "Utility"

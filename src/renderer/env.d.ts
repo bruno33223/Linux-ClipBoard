@@ -10,6 +10,7 @@ export interface ElectronAPI {
     updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<Settings>;
     reorderItems: (activeId: string, overId: string) => Promise<void>;
     getAppPath: () => Promise<string>;
+    hideWindow: () => Promise<void>;
     onClipboardChanged: (callback: (history: ClipboardItem[]) => void) => () => void;
 }
 
