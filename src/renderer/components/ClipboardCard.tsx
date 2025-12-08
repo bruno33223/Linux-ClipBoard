@@ -1,6 +1,7 @@
 import React from 'react';
-import type { ClipboardItem } from 'src/shared/types'; // We need to fix relative path resolution or copy types
-import { Trash2, Pin, GripVertical } from 'lucide-react';
+import type { ClipboardItem } from '../../shared/types';
+import { GripVertical, Pin, Trash2 } from 'lucide-react';
+import { translations } from '../locales';
 
 interface ClipboardCardProps {
     item: ClipboardItem;
@@ -8,9 +9,10 @@ interface ClipboardCardProps {
     onPin: (id: string, e: React.MouseEvent) => void;
     onClick: (item: ClipboardItem) => void;
     theme: 'light' | 'dark';
+    t: typeof translations['en'];
 }
 
-export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, onPin, onClick, theme }) => {
+export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, onPin, onClick, theme, t }) => {
     const isLight = theme === 'light';
 
     return (
@@ -53,7 +55,7 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, on
                         ? 'text-yellow-400 hover:bg-yellow-400/10'
                         : isLight ? 'text-gray-400 hover:bg-gray-100 hover:text-gray-600' : 'text-gray-500 hover:bg-white/10 hover:text-gray-300'
                         }`}
-                    title={item.isPinned ? "Unpin" : "Pin"}
+                    title={item.isPinned ? t.actions.unpin : t.actions.pin}
                 >
                     <Pin size={14} className={item.isPinned ? "fill-current" : ""} />
                 </button>
@@ -61,7 +63,7 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, on
                     onClick={(e) => onDelete(item.id, e)}
                     className={`rounded p-1 transition-colors ${isLight ? 'text-gray-400 hover:bg-red-50 hover:text-red-500' : 'text-gray-500 hover:bg-red-500/20 hover:text-red-400'
                         }`}
-                    title="Delete"
+                    title={t.actions.delete}
                 >
                     <Trash2 size={14} />
                 </button>

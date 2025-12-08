@@ -209,8 +209,9 @@ const defaultData = {
     // Default to cursor as per user request
     grouping: "categorized",
     zoom: 100,
-    theme: "dark"
+    theme: "dark",
     // Assuming dark theme default
+    language: null
   }
 };
 const dbPath = path.join(app.getPath("userData"), "db.json");

@@ -19,18 +19,23 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableItem } from './components/SortableItem';
+import { translations } from './locales';
 
 function App() {
   const [history, setHistory] = useState<ClipboardItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [settings, setSettings] = useState<SettingsType>({
     position: 'cursor',
-    grouping: 'combined',
+    grouping: 'categorized',
     zoom: 100,
-    theme: 'dark'
+    theme: 'dark',
+    language: null
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'text' | 'image'>('all');
+
+  // Translations helper
+  const t = translations[settings.language || 'en']; // Default to EN for display if null, but force settings open
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -53,16 +58,20 @@ function App() {
 
   useEffect(() => {
     const handleBlur = () => {
+      // Don't close if we are forcing language selection
+      if (!settings.language) return;
       setIsSettingsOpen(false);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (!settings.language) return;
         window.electron.hideWindow();
       }
     };
 
     const handleContextMenu = (e: MouseEvent) => {
+      if (!settings.language) return;
       e.preventDefault();
       window.electron.hideWindow();
     };
@@ -76,7 +85,7 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, []);
+  }, [settings.language]); // Re-bind when language changes (to enable/disable closing)
 
   const loadInitialData = async () => {
     const [data, currentSettings] = await Promise.all([
@@ -84,7 +93,13 @@ function App() {
       window.electron.getSettings()
     ]);
     setHistory(data);
-    if (currentSettings) setSettings(currentSettings);
+    if (currentSettings) {
+      setSettings(currentSettings);
+      // Force settings open if no language set
+      if (!currentSettings.language) {
+        setIsSettingsOpen(true);
+      }
+    }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
@@ -157,9 +172,12 @@ function App() {
     >
       <Settings
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={() => {
+          if (settings.language) setIsSettingsOpen(false);
+        }}
         settings={settings}
         onUpdate={updateSetting}
+        t={t}
       />
 
       {/* Header */}
@@ -167,20 +185,20 @@ function App() {
                 ${settings.theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/5 bg-[#1e1e1e]'}`}>
         <div className="flex items-center gap-2">
           <Layout className={settings.theme === 'light' ? 'text-blue-600' : 'text-blue-400'} size={18} />
-          <span className="font-semibold text-sm">Clipboard Manager</span>
+          <span className="font-semibold text-sm">{t.appTitle}</span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setIsSettingsOpen(true)}
             className={`rounded-full p-1.5 transition-colors ${settings.theme === 'light' ? 'hover:bg-gray-200 text-gray-600' : 'hover:bg-white/10 text-gray-400'}`}
-            title="Settings"
+            title={t.actions.settings}
           >
             <SettingsIcon size={14} />
           </button>
           <button
             onClick={handleClearAll}
             className={`rounded-full p-1.5 transition-colors ${settings.theme === 'light' ? 'hover:bg-red-100 text-red-500' : 'hover:bg-red-500/20 text-red-400'}`}
-            title="Clear All"
+            title={t.actions.clearAll}
           >
             <Trash2 size={14} />
           </button>
@@ -193,7 +211,7 @@ function App() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={t.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full rounded-lg border py-2 pl-9 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
@@ -206,9 +224,9 @@ function App() {
 
         <div className="flex rounded-lg bg-black/10 p-1">
           {[
-            { id: 'all', label: 'All', icon: Grid },
-            { id: 'text', label: 'Text', icon: Type },
-            { id: 'image', label: 'Images', icon: ImageIcon },
+            { id: 'all', label: t.tabs.all, icon: Grid },
+            { id: 'text', label: t.tabs.text, icon: Type },
+            { id: 'image', label: t.tabs.image, icon: ImageIcon },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -246,12 +264,13 @@ function App() {
                     onPin={handlePin}
                     onClick={() => handlePaste(item.id)}
                     theme={settings.theme}
+                    t={t}
                   />
                 </SortableItem>
               ))}
               {filteredHistory.length === 0 && (
                 <div className="flex h-32 flex-col items-center justify-center text-gray-500">
-                  <p className="text-sm">No items found</p>
+                  <p className="text-sm">{t.noItems}</p>
                 </div>
               )}
             </div>
@@ -261,7 +280,7 @@ function App() {
 
       {/* Footer */}
       <div className={`border-t py-2 text-center text-[10px] ${settings.theme === 'light' ? 'border-gray-200 text-gray-400' : 'border-white/5 text-white/20'}`}>
-        powered by: Bruno33223
+        {t.footer}
       </div>
     </div>
   );

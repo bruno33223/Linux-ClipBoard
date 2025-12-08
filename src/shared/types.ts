@@ -29,5 +29,6 @@ export interface Settings {
     grouping: 'combined' | 'categorized';
     zoom: number; // 50-200
     theme: 'light' | 'dark';
+    language: 'en' | 'pt-BR' | null;
 }
 

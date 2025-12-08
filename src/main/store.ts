@@ -15,7 +15,8 @@ const defaultData: Data = {
         position: 'cursor', // Default to cursor as per user request
         grouping: 'categorized',
         zoom: 100,
-        theme: 'dark' // Assuming dark theme default
+        theme: 'dark', // Assuming dark theme default
+        language: null
     }
 };
 
