@@ -21,14 +21,8 @@ pub fn run() {
                 api.prevent_close();
             } else if let tauri::WindowEvent::Focused(false) = event {
                 // Auto-hide when focus is lost (clicked outside)
-                // But only if language is set (to prevent hiding during initial setup)
-                let state: tauri::State<DbState> = window.state();
-                let settings = state.get_settings();
-                log::info!("Focus lost. Language set: {:?}", settings.language.is_some());
-                if settings.language.is_some() {
-                     log::info!("Hiding window due to focus loss");
-                     let _ = window.hide();
-                }
+                log::info!("Focus lost. Hiding window.");
+                let _ = window.hide();
             }
         })
         .plugin(tauri_plugin_shell::init())

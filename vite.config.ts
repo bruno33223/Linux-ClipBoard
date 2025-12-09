@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,7 +12,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/', // Tauri expects absolute paths or / usually, but ./ is often used for relative. Let's stick to default or /? Tauri works with /.
+  base: '/',
   root: 'src/renderer',
   publicDir: path.resolve(__dirname, 'public'),
   build: {

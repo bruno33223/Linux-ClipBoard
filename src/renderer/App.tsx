@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { ClipboardItem, Settings as SettingsType } from './src/types';
 import { ClipboardCard } from './components/ClipboardCard';
 import { Settings } from './components/Settings';
@@ -38,6 +38,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<'all' | 'text' | 'image'>('all');
   const [viewMode, setViewMode] = useState<'clipboard' | 'emojis' | 'symbols'>('clipboard');
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Translations helper
   const t = translations[(settings.language as keyof typeof translations) || 'en'];
 
@@ -64,6 +66,7 @@ function App() {
 
   useEffect(() => {
     const handleBlur = () => {
+      console.log('Frontend: Window blurred. Checking language selection before hiding.');
       // If we are forcing language selection, don't close
       if (!settings.language) return;
 
@@ -73,13 +76,23 @@ function App() {
       if (isSettingsOpen) {
         setIsSettingsOpen(false);
       } else {
+        console.log('Frontend: Hiding window due to blur');
         api.hideWindow();
+      }
+    };
+
+    // Add logic to grab focus when window is focused
+    const handleFocus = () => {
+      console.log('Frontend: Window focused. Grabbing input focus.');
+      if (inputRef.current) {
+        inputRef.current.focus();
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (!settings.language) return;
+        console.log('Frontend: Escape pressed. Hiding window.');
         api.hideWindow();
       }
     };
@@ -87,15 +100,18 @@ function App() {
     const handleContextMenu = (e: MouseEvent) => {
       if (!settings.language) return;
       e.preventDefault();
+      console.log('Frontend: Context menu (Right Click). Hiding window.');
       api.hideWindow();
     };
 
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('contextmenu', handleContextMenu);
     };
@@ -272,6 +288,7 @@ function App() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
           <input
+            ref={inputRef}
             type="text"
             placeholder={t.searchPlaceholder}
             value={searchQuery}
