@@ -15,8 +15,12 @@ A modern and efficient clipboard manager for Linux (compatible with Linux Mint a
 
 - **Complete History**: Stores text and images copied to the clipboard.
 - **Modern Interface**: "Card" style layout with support for **Light** and **Dark** themes.
+- **Rich Content**:
+  - **Emoji Picker**: Browse, search, and paste emojis. Includes a **Recent** section for your most used emojis.
+  - **Symbols**: Quick access to math, currency, arrows, and other symbols.
+- **Internationalization 🌍**: Available in **English** and **Portuguese (Brazil)**.
 - **Powerful Organization**:
-  - **Categories**: Filter by "All", "Text", or "Images".
+  - **Categories**: Filter by "All", "Text", "Images", "Emojis", or "Symbols".
   - **Search**: Quickly find what you copied.
   - **Drag & Drop**: Reorder your items by dragging and dropping.
   - **Pin Items**: Keep important items pinned to the top.
