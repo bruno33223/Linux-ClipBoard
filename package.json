@@ -81,7 +81,8 @@
     },
     "snap": {
       "grade": "stable",
-      "confinement": "strict"
+      "confinement": "strict",
+      "base": "core22"
     }
   }
 }
