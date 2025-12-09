@@ -3,7 +3,8 @@ use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
 };
-use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState, Shortcut, GlobalShortcutExt};
+use tauri_plugin_global_shortcut::{ShortcutState, Shortcut, GlobalShortcutExt};
+// Duplicate import removed
 use crate::db::DbState;
 
 mod clipboard;
@@ -23,7 +24,9 @@ pub fn run() {
                 // But only if language is set (to prevent hiding during initial setup)
                 let state: tauri::State<DbState> = window.state();
                 let settings = state.get_settings();
+                log::info!("Focus lost. Language set: {:?}", settings.language.is_some());
                 if settings.language.is_some() {
+                     log::info!("Hiding window due to focus loss");
                      let _ = window.hide();
                 }
             }
@@ -33,10 +36,11 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         // Global shortcut plugin added manually in setup with handler
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            let _ = app.get_webview_window("main")
-                .expect("no main window")
-                .show();
+            if let Some(win) = app.get_webview_window("main") {
+                 commands::show_window(win);
+            }
         }))
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -71,18 +75,14 @@ pub fn run() {
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, shortcut, event| {
                         log::info!("Global shortcut triggered: {:?}", shortcut);
-                        if event.state == ShortcutState::Pressed  {
-                             if let Some(win) = app.get_webview_window("main") {
-                                 log::info!("Showing window from shortcut");
-                                 let _ = win.unminimize();
-                                 let _ = win.show();
-                                 let _ = win.set_focus();
-                                 let _ = win.set_always_on_top(true);
-                                 let _ = win.set_always_on_top(false);
-                             } else {
-                                 log::error!("Main window handle not found in shortcut handler");
-                             }
-                        }
+                        if event.state == ShortcutState::Pressed {
+                              if let Some(win) = app.get_webview_window("main") {
+                                  log::info!("Showing window from shortcut");
+                                  commands::show_window(win);
+                              } else {
+                                  log::error!("Main window handle not found in shortcut handler");
+                              }
+                         }
                     })
                     .build(),
             )?;
@@ -106,11 +106,7 @@ pub fn run() {
                         "show" => {
                             log::info!("Tray Show clicked");
                             if let Some(win) = app.get_webview_window("main") {
-                                 let _ = win.unminimize();
-                                 let _ = win.show();
-                                 let _ = win.set_focus();
-                                 let _ = win.set_always_on_top(true);
-                                 let _ = win.set_always_on_top(false);
+                                 commands::show_window(win);
                             }
                         }
                         _ => {}
@@ -127,8 +123,7 @@ pub fn run() {
                              if win.is_visible().unwrap_or(false) && win.is_focused().unwrap_or(false) {
                                  let _ = win.minimize();
                              } else {
-                                 let _ = win.show();
-                                 let _ = win.set_focus();
+                                 commands::show_window(win);
                              }
                         }
                     }

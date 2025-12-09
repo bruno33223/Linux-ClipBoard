@@ -80,7 +80,7 @@ pub fn reorder_items(state: State<DbState>, active_id: String, over_id: String) 
 }
 
 #[tauri::command]
-pub fn paste_content(app: AppHandle, state: State<DbState>, content: String) {
+pub fn paste_content(app: AppHandle, _state: State<DbState>, content: String) {
      // Write to clipboard (ignore watcher?)
      // To ignore watcher, we might need a flag in Db or Clipboard State.
      // For now just write.
@@ -122,12 +122,80 @@ pub fn set_zoom(window: tauri::WebviewWindow, factor: f64) {
     let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }));
 }
 
+use tauri_plugin_positioner::{WindowExt, Position};
+use mouse_position::mouse_position::Mouse;
+
 #[tauri::command]
 pub fn show_window(window: tauri::WebviewWindow) {
-    // Unminimize blindly just in case it got minimized somehow
-    let _ = window.unminimize();
-    let _ = window.show();
-    let _ = window.set_focus();
+    // 1. Force AlwaysOnTop logic 
     let _ = window.set_always_on_top(true);
-    let _ = window.set_always_on_top(false);
+    
+    // 2. Pre-Show Move (Best Effort to prevent flash)
+    // We calculate position now and try to set it. 
+    // If WM respects it, good. If not, the async retry fixes it.
+    let state: State<DbState> = window.state();
+    let settings = state.get_settings();
+    match settings.position.as_str() {
+         "cursor" => {
+              let position = Mouse::get_mouse_position();
+              match position {
+                  Mouse::Position { x, y } => {
+                      let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                  },
+                  _ => {}
+              }
+         }
+         "center" => {
+             let _ = window.center(); 
+         }
+         _ => {}
+    }
+
+    // 3. Show
+    let _ = window.show();
+
+    // 4. Move/Focus ASYNC (Robust Fallback)
+    let win_clone = window.clone();
+    tauri::async_runtime::spawn(async move {
+         // A. Initial Delay: 150ms to ensure WM has fully mapped the window
+         std::thread::sleep(std::time::Duration::from_millis(150));
+
+         // B. Position Logic (Retry)
+         let state: State<DbState> = win_clone.state();
+         let settings = state.get_settings();
+         match settings.position.as_str() {
+             "cursor" => {
+                  let position = Mouse::get_mouse_position();
+                  match position {
+                      Mouse::Position { x, y } => {
+                          log::info!("Async Moving window to cursor: x={}, y={}", x, y);
+                          match win_clone.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y })) {
+                              Ok(_) => log::info!("Successfully set window position"),
+                              Err(e) => log::error!("Failed to set window position: {}", e),
+                          }
+                      },
+                      _ => log::error!("Failed to get mouse position"),
+                  }
+             }
+             "center" => {
+                 let _ = win_clone.center();
+             }
+             _ => {}
+         }
+
+         // C. Wait for Move (50ms)
+         std::thread::sleep(std::time::Duration::from_millis(50));
+         
+         // D. Focus Logic (Double Tap)
+         match win_clone.set_focus() {
+             Ok(_) => log::info!("Successfully set focus (attempt 1)"),
+             Err(e) => log::warn!("Failed to set focus (attempt 1): {}", e),
+         }
+         
+         // Retry focus just in case
+         std::thread::sleep(std::time::Duration::from_millis(50));
+         let _ = win_clone.set_focus();
+         // NOTE: KEPT AlwaysOnTop=true to ensure focus stability!
+         // let _ = win_clone.set_always_on_top(false); 
+    });
 }

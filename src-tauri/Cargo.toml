@@ -31,3 +31,5 @@ tauri-plugin-store = "2.4.1"
 uuid = { version = "1.19.0", features = ["v4", "fast-rng", "macro-diagnostics"] }
 chrono = "0.4.42"
 tauri-plugin-single-instance = "2.3.6"
+tauri-plugin-positioner = { version = "2.3.1", features = ["tray-icon"] }
+mouse_position = "0.1.4"
