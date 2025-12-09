@@ -1,7 +1,8 @@
-import type { Settings as SettingsType } from '../../shared/types';
+import type { Settings as SettingsType } from '../src/types';
 import { X, Sun, Monitor, ZoomIn, Keyboard, Globe } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { translations } from '../locales';
+import { api } from '../src/lib/api';
 
 interface SettingsProps {
     isOpen: boolean;
@@ -15,7 +16,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
     const [appPath, setAppPath] = useState<string>('...');
 
     useEffect(() => {
-        window.electron.getAppPath().then(setAppPath);
+        api.getAppPath().then(setAppPath);
     }, []);
 
     if (!isOpen) return null;

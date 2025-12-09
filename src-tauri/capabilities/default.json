@@ -1,0 +1,26 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "shell:allow-open",
+    "fs:default",
+    "clipboard-manager:default",
+    "global-shortcut:default",
+    "store:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "xdotool",
+          "cmd": "xdotool",
+          "args": true
+        }
+      ]
+    }
+  ]
+}
