@@ -2,7 +2,14 @@
 
 A modern and efficient clipboard manager for Linux (compatible with Linux Mint and other distributions), built with Electron, React, TypeScript, and Vite. Inspired by Windows Clipboard History (`Win+V`).
 
-![Linux-Clipboard Screenshot](public/clipboard-image.png)
+![Clipboard History](public/clipboard-image-clipboard.png)
+
+## 📸 Screenshots
+
+<p float="left">
+  <img src="public/clipboard-image-emojis.png" width="45%" />
+  <img src="public/clipboard-image-config.png" width="45%" />
+</p>
 
 ## 🚀 Features
 
@@ -35,7 +42,15 @@ A modern and efficient clipboard manager for Linux (compatible with Linux Mint a
 
 Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
 
-### Installation
+### Installation (Snap Store)
+
+The easiest way to install is via the Snap Store:
+
+```bash
+sudo snap install linux-clipboard
+```
+
+### Running from Source
 
 1. Clone the repository:
    ```bash
