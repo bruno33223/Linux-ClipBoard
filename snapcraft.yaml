@@ -16,6 +16,7 @@ issues: https://github.com/Bruno33223/Linux-Clipboard/issues
 apps:
   linux-clipboard:
     command: bin/linux-clipboard
+    desktop: usr/share/applications/linux-clipboard.desktop
     plugs:
       - home
       - x11
@@ -35,10 +36,27 @@ parts:
     source: src-tauri/target/release
     override-build: |
       mkdir -p $CRAFT_PART_INSTALL/bin
+      mkdir -p $CRAFT_PART_INSTALL/usr/share/applications
+      mkdir -p $CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps
+
       if [ -f "$CRAFT_PART_SRC/app" ]; then
         cp "$CRAFT_PART_SRC/app" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
       else
         echo "Binary 'app' not found in $CRAFT_PART_SRC. Run 'npm run tauri build' first."
+        exit 1
+      fi
+
+      if [ -f "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" ]; then
+        cp "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+      else
+         echo "Desktop file not found in $CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/"
+         exit 1
+      fi
+
+      if [ -f "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.png" ]; then
+        cp "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.png" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
+      else
+        echo "Icon not found in $CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/"
         exit 1
       fi
     stage-packages:
