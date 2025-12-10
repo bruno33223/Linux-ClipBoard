@@ -16,6 +16,7 @@ issues: https://github.com/Bruno33223/Linux-Clipboard/issues
 apps:
   linux-clipboard:
     command: bin/linux-clipboard
+    extensions: [gnome]
     desktop: usr/share/applications/linux-clipboard.desktop
     plugs:
       - home
@@ -48,6 +49,8 @@ parts:
 
       if [ -f "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" ]; then
         cp "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+        sed -i 's/Exec=app/Exec=linux-clipboard/g' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+        sed -i 's/Icon=app/Icon=linux-clipboard/g' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
       else
          echo "Desktop file not found in $CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/"
          exit 1
