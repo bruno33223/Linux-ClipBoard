@@ -74,8 +74,14 @@ pub fn run() {
             }
 
             // PROTEÇÃO 2: Carregamento do Ícone Embutido (Resolve o crash e o ícone quebrado)
-            // Certifique-se que o caminho "../icons/icon.png" está correto relativo a este arquivo lib.rs
-            let icon = Image::from_bytes(include_bytes!("../icons/icon.png"));
+            // Carrega os bytes do PNG em tempo de compilação
+            let icon_bytes = include_bytes!("../icons/icon.png");
+            // Decodifica a imagem usando a crate 'image'
+            let icon_img = image::load_from_memory(icon_bytes).expect("Falha ao decodificar ícone embutido");
+            let (width, height) = (icon_img.width(), icon_img.height());
+            let rgba_bytes = icon_img.into_rgba8().into_vec();
+
+            let icon = Image::new_owned(rgba_bytes, width, height);
 
             let _tray = TrayIconBuilder::with_id("tray")
                 .icon(icon) // Usa o ícone carregado da memória
