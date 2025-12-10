@@ -50,11 +50,9 @@ jobs:
         run: npm run tauri build
 
       # 2. Setup e Build do Snap (Gerenciado pelo Snapcraft separadamente)
-      - name: Setup Snapcraft
-        run: sudo snap install snapcraft --classic
-
       - name: Build Snap
-        run: snapcraft --destructive-mode
+        uses: snapcore/action-build@v1
+        id: build
 
       # --- CRIAÇÃO DA RELEASE ---
 
