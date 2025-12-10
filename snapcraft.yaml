@@ -18,6 +18,7 @@ apps:
     command: bin/linux-clipboard
     extensions: [gnome]
     desktop: usr/share/applications/linux-clipboard.desktop
+    icon: src-tauri/icons/icon.png
     plugs:
       - home
       - x11
@@ -36,31 +37,43 @@ parts:
     plugin: nil
     source: src-tauri/target/release
     override-build: |
+      # ... (seus mkdirs anteriores continuam iguais) ...
       mkdir -p $CRAFT_PART_INSTALL/bin
       mkdir -p $CRAFT_PART_INSTALL/usr/share/applications
       mkdir -p $CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps
 
+      # ... (cópia do binário 'app' continua igual) ...
       if [ -f "$CRAFT_PART_SRC/app" ]; then
         cp "$CRAFT_PART_SRC/app" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
       else
-        echo "Binary 'app' not found in $CRAFT_PART_SRC. Run 'npm run tauri build' first."
+        echo "Binary not found"
         exit 1
       fi
 
-      if [ -f "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" ]; then
-        cp "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.desktop" "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
-        sed -i 's/Exec=app/Exec=linux-clipboard/g' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
-        sed -i 's/Icon=app/Icon=linux-clipboard/g' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+      # ---------------------------------------------------------
+      # CORREÇÃO DA CÓPIA DO ÍCONE E DESKTOP (Usando find para segurança)
+      # ---------------------------------------------------------
+      
+      # Encontra o ícone png (ignora maiúsculas/minúsculas no nome)
+      ICON_SRC=$(find "$CRAFT_PART_SRC/bundle/appimage" -iname "*.png" | head -n 1)
+      if [ -n "$ICON_SRC" ]; then
+        cp "$ICON_SRC" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
       else
-         echo "Desktop file not found in $CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/"
+        echo "ERRO: Ícone .png não encontrado no bundle AppImage!"
+        exit 1
+      fi
+
+      # Encontra o arquivo .desktop
+      DESKTOP_SRC=$(find "$CRAFT_PART_SRC/bundle/appimage" -name "*.desktop" | head -n 1)
+      if [ -n "$DESKTOP_SRC" ]; then
+        cp "$DESKTOP_SRC" "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+        
+        # Força o Exec e o Icon corretos
+        sed -i 's/^Exec=.*/Exec=linux-clipboard/' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+        sed -i 's/^Icon=.*/Icon=linux-clipboard/' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+      else
+         echo "ERRO: Arquivo .desktop não encontrado!"
          exit 1
-      fi
-
-      if [ -f "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.png" ]; then
-        cp "$CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/Linux-Clipboard.png" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
-      else
-        echo "Icon not found in $CRAFT_PART_SRC/bundle/appimage/Linux-Clipboard.AppDir/"
-        exit 1
       fi
     stage-packages:
       - libgtk-3-0
