@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/capabilities/
+
+# Snapcraft
+parts/
+stage/
+prime/
+*.snap
+*.snap-build
+
+# OS
+Thumbs.db
+ehthumbs.db
+.spotlight-V100
+.Trashes

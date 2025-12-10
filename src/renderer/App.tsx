@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import type { ClipboardItem, Settings as SettingsType } from '../shared/types';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import type { ClipboardItem, Settings as SettingsType } from './src/types';
 import { ClipboardCard } from './components/ClipboardCard';
 import { Settings } from './components/Settings';
 import { Search, Trash2, Layout, Settings as SettingsIcon, Image as ImageIcon, Type, Grid, Smile, Sigma, Clipboard } from 'lucide-react';
@@ -22,6 +22,7 @@ import { SortableItem } from './components/SortableItem';
 import { translations } from './locales';
 import { EmojiPicker } from './components/EmojiPicker';
 import { SymbolPicker } from './components/SymbolPicker';
+import { api } from './src/lib/api';
 
 function App() {
   const [history, setHistory] = useState<ClipboardItem[]>([]);
@@ -37,8 +38,10 @@ function App() {
   const [activeTab, setActiveTab] = useState<'all' | 'text' | 'image'>('all');
   const [viewMode, setViewMode] = useState<'clipboard' | 'emojis' | 'symbols'>('clipboard');
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Translations helper
-  const t = translations[settings.language || 'en']; // Default to EN for display if null, but force settings open
+  const t = translations[(settings.language as keyof typeof translations) || 'en'];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -53,52 +56,78 @@ function App() {
 
   useEffect(() => {
     loadInitialData();
-    const unsubscribe = window.electron.onClipboardChanged((data) => {
+    const unsubscribe = api.onClipboardChanged((data) => {
       setHistory(data);
     });
-    return () => unsubscribe();
+
+    const unsubscribeFocus = api.onForceFocus(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeFocus();
+    };
   }, []);
 
   useEffect(() => {
     const handleBlur = () => {
-      // Don't close if we are forcing language selection
+      // If we are forcing language selection, don't close
       if (!settings.language) return;
-      setIsSettingsOpen(false);
+
+      // If settings are open, just close settings? Or close everything?
+      // User request: "disappear (minimize) when clicking outside"
+      // Usually this means hiding the app.
+      if (isSettingsOpen) {
+        setIsSettingsOpen(false);
+      } else {
+        api.hideWindow();
+      }
+    };
+
+    // Add logic to grab focus when window is focused
+    const handleFocus = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (!settings.language) return;
-        window.electron.hideWindow();
+        api.hideWindow();
       }
     };
 
     const handleContextMenu = (e: MouseEvent) => {
       if (!settings.language) return;
       e.preventDefault();
-      window.electron.hideWindow();
+      api.hideWindow();
     };
 
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [settings.language]); // Re-bind when language changes (to enable/disable closing)
+  }, [settings.language]);
 
   const loadInitialData = async () => {
     const [data, currentSettings] = await Promise.all([
-      window.electron.getHistory(),
-      window.electron.getSettings()
+      api.getHistory(),
+      api.getSettings()
     ]);
     setHistory(data);
     if (currentSettings) {
       setSettings(currentSettings);
-      // Force settings open if no language set
       if (!currentSettings.language) {
         setIsSettingsOpen(true);
       }
@@ -107,61 +136,42 @@ function App() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await window.electron.deleteItem(id);
-    const newHistory = await window.electron.getHistory();
+    await api.deleteItem(id);
+    const newHistory = await api.getHistory();
     setHistory(newHistory);
   };
 
   const handlePin = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Optimistic update
     setHistory(prev => prev.map(item =>
       item.id === id ? { ...item, isPinned: !item.isPinned } : item
     ));
-    await window.electron.togglePin(id);
-    // Sync with backend to be sure
-    const newHistory = await window.electron.getHistory();
+    await api.togglePin(id);
+    const newHistory = await api.getHistory();
     setHistory(newHistory);
   };
 
   const handleClearAll = async () => {
-    await window.electron.clearAll();
-    const newHistory = await window.electron.getHistory();
+    await api.clearAll();
+    const newHistory = await api.getHistory();
     setHistory(newHistory);
   };
 
   const handlePaste = async (id: string) => {
-    await window.electron.pasteItem(id);
+    await api.pasteItem(id);
   };
 
-  // For emojis and symbols - we technically need to add them to history or just copy them.
-  // Ideally, 'pasteItem' is for existing history items.
-  // We can create a temporary item or use IPC to just write to clipboard and paste.
-  // For simplicity: We will insert into history as a new item and then paste that.
-  // OR better: use navigator.clipboard.writeText then hide + simulate paste if possible. 
-  // BUT app is transparent/unfocused? No, we are focused.
-  // Let's rely on the main process 'pasteItem' if we add it to history first?
-  // Actually, let's just use navigator.clipboard to write, then hide. The user can paste manually? 
-  // User expects "paste".
-  // Let's create a new 'ad-hoc' copy-paste flow or just reusing `addClipboardItem` from main?
-  // Easiest: Copy to clipboard -> App detects change -> Adds to history -> User pastes.
-  // But we want to auto-paste. 
-  // Let's assume we copy to clipboard, and then tell main process to "hide and paste".
-  // But "hide and paste" in main relies on an ID.
-  // Let's manually invoke the "hide window" and let user paste? Or can we trigger paste?
-  // Let's try: Write to clipboard -> Wait for "clipboard-changed" (optional) -> Hide.
-  // The user asked "add a navigator...".
-  // Let's just write to clipboard and hide window. The user can Ctrl+V.
-  // Wait, if I click an emoji, I expect it to appear in my document.
-  // I should probably implement a "copyAndPaste" IPC or similar.
-  // For now: I will write to clipboard and hide.
   const handleCopyAndPaste = async (content: string) => {
-    await window.electron.pasteContent(content);
+    await api.pasteContent(content);
   }
 
   const updateSetting = async (key: keyof SettingsType, value: any) => {
-    const newSettings = await window.electron.updateSetting(key, value);
+    const newSettings = await api.updateSetting(key, value);
     setSettings(newSettings);
+    if (key === 'zoom') {
+      const zoomValue = typeof value === 'number' ? value / 100 : 1.0;
+      await api.setZoom(zoomValue);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -173,7 +183,7 @@ function App() {
         const newIndex = items.findIndex((item) => item.id === over.id);
         return arrayMove(items, oldIndex, newIndex);
       });
-      await window.electron.reorderItems(active.id as string, over.id as string);
+      await api.reorderItems(active.id as string, over.id as string);
     }
   };
 
@@ -197,6 +207,11 @@ function App() {
       className={`flex h-screen flex-col overflow-hidden text-white transition-colors
              ${settings.theme === 'light' ? 'bg-gray-100 text-gray-900' : 'bg-[#0f0f0f]'}
             `}
+      style={{
+        // transform: `scale(${settings.zoom / 100})`, // Transform can cause layout issues with fixed width/height
+        // transformOrigin: 'top left',
+        // zoom: settings.zoom / 100
+      }}
     >
       <Settings
         isOpen={isSettingsOpen}
@@ -204,19 +219,22 @@ function App() {
           if (settings.language) setIsSettingsOpen(false);
         }}
         settings={settings}
-        onUpdate={updateSetting}
+        onUpdate={(k, v) => { updateSetting(k, v); }}
         t={t}
       />
 
       {/* Header */}
-      <div className={`draggable flex items-center justify-between border-b p-3
+      <div
+        onMouseDown={() => api.startDragging()}
+        className={`draggable flex items-center justify-between border-b p-3 select-none cursor-default
                 ${settings.theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/5 bg-[#1e1e1e]'}`}>
-        <div className="flex items-center gap-2">
+        <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
           <Layout className={settings.theme === 'light' ? 'text-blue-600' : 'text-blue-400'} size={18} />
           <span className="font-semibold text-sm">{t.appTitle}</span>
         </div>
         <div className="flex gap-2">
           <button
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={() => setIsSettingsOpen(true)}
             className={`rounded-full p-1.5 transition-colors ${settings.theme === 'light' ? 'hover:bg-gray-200 text-gray-600' : 'hover:bg-white/10 text-gray-400'}`}
             title={t.actions.settings}
@@ -224,6 +242,7 @@ function App() {
             <SettingsIcon size={14} />
           </button>
           <button
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={handleClearAll}
             className={`rounded-full p-1.5 transition-colors ${settings.theme === 'light' ? 'hover:bg-red-100 text-red-500' : 'hover:bg-red-500/20 text-red-400'}`}
             title={t.actions.clearAll}
@@ -267,12 +286,12 @@ function App() {
         </button>
       </div>
 
-      {/* Search & Tabs logic - Repositioned: Search is global now, Tabs only for clipboard */}
+      {/* Search & Tabs logic */}
       <div className={`p-3 space-y-3 ${settings.theme === 'light' ? 'bg-gray-50' : 'bg-[#0f0f0f]'}`}>
-        {/* Global Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
           <input
+            ref={inputRef}
             type="text"
             placeholder={t.searchPlaceholder}
             value={searchQuery}
@@ -285,7 +304,6 @@ function App() {
           />
         </div>
 
-        {/* Conditional Tabs (Only for Clipboard) */}
         {viewMode === 'clipboard' && (
           <div className="flex rounded-lg bg-black/10 p-1">
             {[

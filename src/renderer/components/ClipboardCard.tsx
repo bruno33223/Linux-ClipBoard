@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ClipboardItem } from '../../shared/types';
+import type { ClipboardItem } from '../src/types';
 import { GripVertical, Pin, Trash2 } from 'lucide-react';
 import { translations } from '../locales';
 

@@ -1,50 +1,18 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
-import electron from 'vite-plugin-electron/simple'
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    electron({
-      main: {
-        // Shortcut of `build.lib.entry`.
-        entry: path.join(__dirname, 'src/main/index.ts'),
-        vite: {
-          build: {
-            // For main process, we want project root context
-            outDir: '../../dist-electron',
-            rollupOptions: {
-              external: ['electron', 'electron-squirrel-startup'],
-            }
-          }
-        }
-      },
-      preload: {
-        // Shortcut of `build.rollupOptions.input`.
-        input: path.join(__dirname, 'src/main/preload.ts'),
-        vite: {
-          build: {
-            outDir: '../../dist-electron',
-            rollupOptions: {
-              output: {
-                format: 'cjs',
-                entryFileNames: 'preload.cjs', // Force .cjs extension for CommonJS
-                inlineDynamicImports: true,
-              },
-            },
-          }
-        }
-      },
-      // Ployfill the Electron and Node.js built-in modules for Renderer process.
-      // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-      renderer: {},
-    }),
   ],
-  base: './',
+  base: '/',
   root: 'src/renderer',
   publicDir: path.resolve(__dirname, 'public'),
   build: {
@@ -57,4 +25,10 @@ export default defineConfig({
       'src': path.resolve(__dirname, 'src'),
     },
   },
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: true,
+  },
+  clearScreen: false,
 })

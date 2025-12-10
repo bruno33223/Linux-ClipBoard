@@ -1,0 +1,63 @@
+name: linux-clipboard
+base: core24
+version: '1.1.0'
+summary: A modern clipboard manager for Linux Mint
+description: |
+  A modern, efficient, and visual clipboard manager for Linux Mint and other distributions.
+  Features text and image history, categorization, drag-and-drop, and system tray integration.
+
+grade: stable
+confinement: strict
+license: MIT
+website: https://github.com/Bruno33223/Linux-Clipboard
+source-code: https://github.com/Bruno33223/Linux-Clipboard
+issues: https://github.com/Bruno33223/Linux-Clipboard/issues
+
+apps:
+  linux-clipboard:
+    command: bin/linux-clipboard
+    plugs:
+      - home
+      - x11
+      - wayland
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - network
+      - opengl
+      - audio-playback
+      - mount-observe
+      - system-observe
+
+parts:
+  linux-clipboard:
+    plugin: nil
+    source: src-tauri/target/release
+    override-build: |
+      mkdir -p $CRAFT_PART_INSTALL/bin
+      if [ -f "$CRAFT_PART_SRC/app" ]; then
+        cp "$CRAFT_PART_SRC/app" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
+      else
+        echo "Binary 'app' not found in $CRAFT_PART_SRC. Run 'npm run tauri build' first."
+        exit 1
+      fi
+    stage-packages:
+      - libgtk-3-0
+      - libgdk-pixbuf-2.0-0
+      - libglib2.0-0
+      - libcairo2
+      - libpango-1.0-0
+      - libpangocairo-1.0-0
+      - libx11-6
+      - libwayland-client0
+      - libxkbcommon0
+      - libgl1
+      - libegl1
+      - libicu74
+      - libwebkit2gtk-4.1-0
+      - libjavascriptcoregtk-4.1-0
+      - libsoup-3.0-0
+      - libsecret-1-0
+      - libjpeg-turbo8
+      - libpng16-16
+      - libwebp7

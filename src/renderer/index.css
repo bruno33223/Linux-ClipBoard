@@ -23,16 +23,3 @@
         /* gray-500 */
     }
 }
-
-@layer utilities {
-    .draggable {
-        -webkit-app-region: drag;
-    }
-
-    .draggable button,
-    .draggable a,
-    .draggable input,
-    .draggable [role="button"] {
-        -webkit-app-region: no-drag;
-    }
-}
