@@ -37,12 +37,11 @@ parts:
     plugin: nil
     source: src-tauri/target/release
     override-build: |
-      # ... (seus mkdirs anteriores continuam iguais) ...
+
       mkdir -p $CRAFT_PART_INSTALL/bin
       mkdir -p $CRAFT_PART_INSTALL/usr/share/applications
       mkdir -p $CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps
 
-      # ... (cópia do binário 'app' continua igual) ...
       if [ -f "$CRAFT_PART_SRC/app" ]; then
         cp "$CRAFT_PART_SRC/app" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
       else
