@@ -1,4 +1,4 @@
-use tauri::{AppHandle, State, Window, Manager};
+use tauri::{AppHandle, State, Window, Manager, Emitter};
 use crate::db::{DbState, ClipboardItem};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_shell::ShellExt;
@@ -127,10 +127,14 @@ use mouse_position::mouse_position::Mouse;
 
 #[tauri::command]
 pub fn show_window(window: tauri::WebviewWindow) {
-    // 1. Force AlwaysOnTop logic
+    // 1. Explicit Unminimize (Vital for Linux)
+    // Ensures window isn't in a hidden state internally by the WM
+    let _ = window.unminimize();
+
+    // 2. Force AlwaysOnTop logic
     let _ = window.set_always_on_top(true);
     
-    // 2. Calculate and Set Position BEFORE showing (No Flicker)
+    // 3. Calculate and Set Position BEFORE showing
     let state: State<DbState> = window.state();
     let settings = state.get_settings();
     
@@ -150,32 +154,36 @@ pub fn show_window(window: tauri::WebviewWindow) {
          _ => {}
     }
 
-    // 3. Show Window (and Unminimize just in case)
-    let _ = window.unminimize();
+    // 4. Show Window
     let _ = window.show();
 
-    // 4. Force Focus immediately
-    match window.set_focus() {
-        Ok(_) => log::info!("Focus set immediately"),
-        Err(e) => log::warn!("Failed to set focus immediately: {}", e),
-    }
+    // 5. Force Focus immediately
+    let _ = window.set_focus();
 
-    // 5. Retry Focus Strategy (Async)
-    // Linux WMs can be finicky. We try multiple times.
+    // NUCLEAR OPTION: xdotool
+    // Force WM to activate window using xdotool
+    let shell = window.app_handle().shell();
+    let _ = shell.command("xdotool")
+        .args(["search", "--name", "Linux Clipboard", "windowactivate"])
+        .spawn();
+
+    // EMIT FORCE FOCUS EVENT (Immediate)
+    let _ = window.emit("force-focus", ());
+
+    // 6. Aggressive Focus Strategy (Async "Reinforcement")
+    // Schedule a second attempt after 100ms to catch up with WM animations/composition
     let win_clone = window.clone();
-    std::thread::spawn(move || {
-        // Attempt 1: 50ms - Fast retry for responsive WMs
-        std::thread::sleep(std::time::Duration::from_millis(50));
-        match win_clone.set_focus() {
-             Ok(_) => log::info!("Focus set (retry 1 - 50ms)"),
-             Err(e) => log::warn!("Focus failed (retry 1 - 50ms): {}", e),
-        }
+    
+    tauri::async_runtime::spawn(async move {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        let _ = win_clone.set_focus();
         
-        // Attempt 2: 150ms - Slower retry for sluggish WMs or animations
-        std::thread::sleep(std::time::Duration::from_millis(100)); // +100ms = 150ms total
-        match win_clone.set_focus() {
-             Ok(_) => log::info!("Focus set (retry 2 - 150ms)"),
-             Err(e) => log::warn!("Focus failed (retry 2 - 150ms): {}", e),
-        }
+        let shell = win_clone.app_handle().shell();
+        let _ = shell.command("xdotool")
+            .args(["search", "--name", "Linux Clipboard", "windowactivate"])
+            .spawn();
+
+        // EMIT FORCE FOCUS EVENT (Delayed)
+        let _ = win_clone.emit("force-focus", ());
     });
 }

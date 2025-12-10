@@ -16,12 +16,10 @@ pub fn run() {
     tauri::Builder::default()
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                log::info!("Window CloseRequested received. Hiding window instead of closing.");
-                window.hide().unwrap();
+                let _ = window.hide();
                 api.prevent_close();
             } else if let tauri::WindowEvent::Focused(false) = event {
                 // Auto-hide when focus is lost (clicked outside)
-                log::info!("Focus lost. Hiding window.");
                 let _ = window.hide();
             }
         })
@@ -67,14 +65,10 @@ pub fn run() {
 
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
-                    .with_handler(move |app, shortcut, event| {
-                        log::info!("Global shortcut triggered: {:?}", shortcut);
+                    .with_handler(move |app, _shortcut, event| {
                         if event.state == ShortcutState::Pressed {
                               if let Some(win) = app.get_webview_window("main") {
-                                  log::info!("Showing window from shortcut");
                                   commands::show_window(win);
-                              } else {
-                                  log::error!("Main window handle not found in shortcut handler");
                               }
                          }
                     })
@@ -94,11 +88,9 @@ pub fn run() {
                 .on_menu_event(|app, event| {
                     match event.id.as_ref() {
                         "quit" => {
-                            log::info!("Tray Quit clicked");
                             app.exit(0);
                         }
                         "show" => {
-                            log::info!("Tray Show clicked");
                             if let Some(win) = app.get_webview_window("main") {
                                  commands::show_window(win);
                             }

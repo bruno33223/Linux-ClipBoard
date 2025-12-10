@@ -59,14 +59,21 @@ function App() {
     const unsubscribe = api.onClipboardChanged((data) => {
       setHistory(data);
     });
+
+    const unsubscribeFocus = api.onForceFocus(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    });
+
     return () => {
       unsubscribe();
+      unsubscribeFocus();
     };
   }, []);
 
   useEffect(() => {
     const handleBlur = () => {
-      console.log('Frontend: Window blurred. Checking language selection before hiding.');
       // If we are forcing language selection, don't close
       if (!settings.language) return;
 
@@ -76,14 +83,12 @@ function App() {
       if (isSettingsOpen) {
         setIsSettingsOpen(false);
       } else {
-        console.log('Frontend: Hiding window due to blur');
         api.hideWindow();
       }
     };
 
     // Add logic to grab focus when window is focused
     const handleFocus = () => {
-      console.log('Frontend: Window focused. Grabbing input focus.');
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -92,7 +97,6 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (!settings.language) return;
-        console.log('Frontend: Escape pressed. Hiding window.');
         api.hideWindow();
       }
     };
@@ -100,7 +104,6 @@ function App() {
     const handleContextMenu = (e: MouseEvent) => {
       if (!settings.language) return;
       e.preventDefault();
-      console.log('Frontend: Context menu (Right Click). Hiding window.');
       api.hideWindow();
     };
 

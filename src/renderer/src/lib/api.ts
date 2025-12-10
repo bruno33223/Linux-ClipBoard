@@ -31,5 +31,17 @@ export const api = {
         return () => {
             if (unlisten) unlisten();
         };
+    },
+
+    onForceFocus: (callback: () => void) => {
+        let unlisten: UnlistenFn | undefined;
+        const promise = listen<void>('force-focus', () => {
+            callback();
+        });
+        promise.then(u => unlisten = u);
+
+        return () => {
+            if (unlisten) unlisten();
+        };
     }
 };
