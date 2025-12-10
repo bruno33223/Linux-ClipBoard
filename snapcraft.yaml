@@ -1,6 +1,7 @@
 name: linux-clipboard
 base: core24
 version: '1.1.1'
+icon: src-tauri/icons/icon.png
 summary: A modern clipboard manager for Linux Mint
 description: |
   A modern, efficient, and visual clipboard manager for Linux Mint and other distributions.
@@ -18,7 +19,6 @@ apps:
     command: bin/linux-clipboard
     extensions: [gnome]
     desktop: usr/share/applications/linux-clipboard.desktop
-    icon: src-tauri/icons/icon.png
     plugs:
       - home
       - x11
