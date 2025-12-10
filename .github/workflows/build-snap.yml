@@ -1,51 +1,73 @@
-name: Build Snap Package
+name: Build & Release
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão da Release (ex: v1.0.0)'
+        required: true
+        default: 'v0.0.1'
+
+# Permissões necessárias para criar Releases
+permissions:
+  contents: write
 
 jobs:
-  build-snap:
+  build-and-release:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
+      # --- SETUP E CACHES (Mantidos da versão anterior) ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri"
 
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libssl-dev \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
+            build-essential curl wget file libssl-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev
 
       - name: Install Frontend Dependencies
         run: npm install
 
-      - name: Build Binary (Tauri)
+      # --- BUILD DOS ARQUIVOS ---
+      
+      # 1. Build AppImage e Deb (Gerenciados pelo Tauri)
+      - name: Build Tauri Bundles (AppImage & Deb)
         run: npm run tauri build
 
+      # 2. Setup e Build do Snap (Gerenciado pelo Snapcraft separadamente)
       - name: Setup Snapcraft
         run: sudo snap install snapcraft --classic
 
       - name: Build Snap
         run: snapcraft --destructive-mode
 
-      - name: Upload Snap Artifact
-        uses: actions/upload-artifact@v4
+      # --- CRIAÇÃO DA RELEASE ---
+
+      - name: Create Release & Upload Assets
+        uses: softprops/action-gh-release@v1
         with:
-          name: linux-clipboard-snap
-          path: "*.snap"
+          tag_name: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/deb/*.deb
+            *.snap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
