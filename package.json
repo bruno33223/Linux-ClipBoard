@@ -1,7 +1,7 @@
 {
   "name": "linux-clipboard",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A modern, efficient, and visual clipboard manager for Linux Mint and other distributions. Features text and image history, categorization, drag-and-drop, and system tray integration.",
   "keywords": [
     "clipboard",
