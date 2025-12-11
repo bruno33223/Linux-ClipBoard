@@ -25,6 +25,7 @@ apps:
     desktop: usr/share/applications/linux-clipboard.desktop
     environment:
       WEBKIT_FORCE_SANDBOX: "0"
+      WEBKIT_EXEC_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
     plugs:
       - home
       - x11
