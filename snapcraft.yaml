@@ -15,8 +15,8 @@ source-code: https://github.com/Bruno33223/Linux-Clipboard
 issues: https://github.com/Bruno33223/Linux-Clipboard/issues
 
 layout:
-  /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1:
-    bind: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
+    bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
 
 apps:
   linux-clipboard:
