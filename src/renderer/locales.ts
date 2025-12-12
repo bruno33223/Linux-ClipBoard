@@ -12,14 +12,18 @@ export const translations = {
         noItems: 'No items found',
         settings: {
             title: 'Settings',
+            autoStart: 'Run on Startup',
             windowPosition: 'Window Position',
             positionFixed: 'Fixed',
             positionCursor: 'Cursor',
             positionMouse: 'Mouse', // Synonym in UI just in case
             grouping: 'Tab Organization', // Deprecated but might be needed if I overlooked something
             zoom: 'Size (Zoom)',
+
+            useInternalShortcut: 'Use internal "Ctrl+Super+V" shortcut',
+            internalShortcutDesc: 'If enabled, the app runs in background and listens for Ctrl+Super+V directly. Disable system shortcut if using this.',
             shortcuts: 'Keyboard Shortcuts',
-            shortcutsDesc: 'To open the app with a key (e.g. Super+V), create a shortcut in your Linux system:',
+            shortcutsDesc: 'To open the app with a key (e.g. Ctrl+Super+V), create a shortcut in your Linux system:',
             shortcutsSteps: [
                 'Go to **Settings > Keyboard > Shortcuts**',
                 'Add a custom shortcut',
@@ -27,6 +31,7 @@ export const translations = {
                 'Command:'
             ],
             copyCommand: 'Copy',
+            unstablePathWarning: 'Running from temporary/build location. Move to Applications for stable shortcuts.',
             theme: 'Theme',
             themeDark: 'Dark',
             themeLight: 'Light',
@@ -72,14 +77,18 @@ export const translations = {
         noItems: 'Nenhum item encontrado',
         settings: {
             title: 'Configurações',
+            autoStart: 'Iniciar com o sistema',
             windowPosition: 'Posição da Janela',
             positionFixed: 'Fixa',
             positionCursor: 'Mouse',
             positionMouse: 'Mouse',
             grouping: 'Organização das Abas',
             zoom: 'Tamanho (Zoom)',
+
+            useInternalShortcut: 'Usar atalho interno "Ctrl+Super+V"',
+            internalShortcutDesc: 'Se ativado, o app roda em segundo plano e escuta Ctrl+Super+V diretamente. Desative o atalho do sistema se usar isso.',
             shortcuts: 'Atalho de Teclado',
-            shortcutsDesc: 'Para abrir o app com uma tecla (ex: Super+V), crie um atalho no seu sistema Linux:',
+            shortcutsDesc: 'Para abrir o app com uma tecla (ex: Ctrl+Super+V), crie um atalho no seu sistema Linux:',
             shortcutsSteps: [
                 'Vá em **Configurações > Teclado > Atalhos**',
                 'Adicione um atalho personalizado',
@@ -87,6 +96,7 @@ export const translations = {
                 'Comando:'
             ],
             copyCommand: 'Copiar',
+            unstablePathWarning: 'Executando de local temporário/build. Mova para Aplicações para atalhos estáveis.',
             theme: 'Tema',
             themeDark: 'Escuro',
             themeLight: 'Claro',

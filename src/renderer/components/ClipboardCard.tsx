@@ -37,9 +37,9 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, on
                     </p>
                 ) : (
                     <img
-                        src={`app://clipboard-manager/images/${item.content}`}
+                        src={`data:image/png;base64,${item.content}`}
                         alt="Clipboard Image"
-                        className="max-h-48 w-full rounded object-contain bg-black/50"
+                        className="max-h-24 w-full rounded object-contain bg-black/50"
                     />
                 )}
                 <div className={`text-xs mt-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>

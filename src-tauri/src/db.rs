@@ -22,6 +22,8 @@ pub struct Settings {
     pub zoom: i32,
     pub theme: String,
     pub language: Option<String>,
+    #[serde(default)]
+    pub use_internal_shortcut: bool,
 }
 
 impl Default for Settings {
@@ -32,6 +34,7 @@ impl Default for Settings {
             zoom: 100,
             theme: "dark".to_string(),
             language: None,
+            use_internal_shortcut: false,
         }
     }
 }
@@ -147,6 +150,12 @@ impl DbState {
                 } else if value.is_null() {
                     db.settings.language = None;
                 }
+            }
+
+            "useInternalShortcut" => {
+                 if let Some(v) = value.as_bool() {
+                     db.settings.use_internal_shortcut = v;
+                 }
             }
             _ => {}
         }

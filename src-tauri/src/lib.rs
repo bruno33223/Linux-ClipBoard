@@ -27,6 +27,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec![])))
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(win) = app.get_webview_window("main") {
                  commands::show_window(win);
@@ -42,6 +43,7 @@ pub fn run() {
             }
             
             let state = DbState::new(app.handle());
+            let settings = state.get_settings(); // Capture settings before moving state
             app.manage(state);
             
             clipboard::start_watcher(app.handle().clone());
@@ -50,7 +52,7 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Show Clipboard", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
-            let shortcut_str = if cfg!(target_os = "macos") { "Command+Shift+V" } else { "Super+V" };
+            let shortcut_str = if cfg!(target_os = "macos") { "Command+Control+V" } else { "Super+Control+V" };
 
             // PROTEÇÃO 1: Registro de atalho seguro (sem unwrap)
             if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
@@ -59,15 +61,26 @@ pub fn run() {
                         .with_handler(move |app, _shortcut, event| {
                             if event.state == ShortcutState::Pressed {
                                 if let Some(win) = app.get_webview_window("main") {
-                                    commands::show_window(win);
+                                    // LOGIC: Simplified Toggle
+                                    // If focused -> Hide
+                                    // Else (Hidden or Blurred) -> Show and Focus
+                                    if win.is_focused().unwrap_or(false) {
+                                        let _ = win.hide();
+                                    } else {
+                                        commands::show_window(win);
+                                    }
                                 }
                             }
                         })
                         .build(),
                 )?;
+
                 
-                if let Err(e) = app.global_shortcut().register(shortcut) {
-                    log::error!("Erro ao registrar atalho global: {}", e);
+                // CONDITIONAL REGISTRATION based on Settings
+                if settings.use_internal_shortcut {
+                    if let Err(e) = app.global_shortcut().register(shortcut) {
+                        log::error!("Erro ao registrar atalho global: {}", e);
+                    }
                 }
             } else {
                 log::error!("Formato de atalho inválido: {}", shortcut_str);

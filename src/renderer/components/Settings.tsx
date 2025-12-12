@@ -3,6 +3,8 @@ import { X, Sun, Monitor, ZoomIn, Keyboard, Globe } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { translations } from '../locales';
 import { api } from '../src/lib/api';
+import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart';
+import { Zap } from 'lucide-react';
 
 interface SettingsProps {
     isOpen: boolean;
@@ -14,10 +16,35 @@ interface SettingsProps {
 
 export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsProps) => {
     const [appPath, setAppPath] = useState<string>('...');
+    const [autoStartEnabled, setAutoStartEnabled] = useState(false);
 
     useEffect(() => {
         api.getAppPath().then(setAppPath);
+        checkAutoStart();
     }, []);
+
+    const checkAutoStart = async () => {
+        try {
+            const active = await isEnabled();
+            setAutoStartEnabled(active);
+        } catch (e) {
+            console.error("Failed to check autostart status:", e);
+        }
+    };
+
+    const toggleAutoStart = async () => {
+        try {
+            if (autoStartEnabled) {
+                await disable();
+                setAutoStartEnabled(false);
+            } else {
+                await enable();
+                setAutoStartEnabled(true);
+            }
+        } catch (e) {
+            console.error("Failed to toggle autostart:", e);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -35,7 +62,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className={`flex w-full max-w-sm flex-col rounded-xl border shadow-2xl max-h-[90vh] ${bgColor} ${isLight ? 'border-gray-200' : 'border-white/10'}`}>
+            <div className={`flex w-full max-w-sm flex-col rounded-xl border shadow-2xl max-h-[85vh] overflow-hidden ${bgColor} ${isLight ? 'border-gray-200' : 'border-white/10'}`}>
                 <div className={`flex items-center justify-between border-b p-4 ${borderColor}`}>
                     <h2 className={`text-lg font-bold ${textColor}`}>{t.settings.title}</h2>
                     {!isLangMissing && (
@@ -46,6 +73,24 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
                 </div>
 
                 <div className="flex-1 space-y-6 overflow-y-auto p-4 scrollbar-hide">
+
+                    {/* Auto Start */}
+                    <div className="space-y-3">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
+                            <Zap size={16} /> {t.settings.autoStart}
+                        </label>
+                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
+                            <button
+                                onClick={toggleAutoStart}
+                                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${autoStartEnabled
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : inactiveText
+                                    }`}
+                            >
+                                {autoStartEnabled ? 'ON' : 'OFF'}
+                            </button>
+                        </div>
+                    </div>
 
                     {/* Language */}
                     <div className={`space-y-3 ${isLangMissing ? 'animate-pulse' : ''}`}>
@@ -121,6 +166,29 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
                         />
                     </div>
 
+
+
+                    {/* Internal Shortcut Toggle */}
+                    <div className="space-y-3">
+                        <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
+                            <Zap size={16} /> {t.settings.useInternalShortcut}
+                        </label>
+                        <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-white/50'}`}>
+                            {t.settings.internalShortcutDesc}
+                        </p>
+                        <div className={`flex rounded-lg p-1 ${inputBg}`}>
+                            <button
+                                onClick={() => onUpdate('useInternalShortcut', !settings.useInternalShortcut)}
+                                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-all ${settings.useInternalShortcut
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : inactiveText
+                                    }`}
+                            >
+                                {settings.useInternalShortcut ? 'ON' : 'OFF'}
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Shortcuts */}
                     <div className="space-y-3">
                         <label className={`flex items-center gap-2 text-sm font-medium ${secondaryText}`}>
@@ -145,6 +213,11 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
                                     Copy
                                 </button>
                             </div>
+                            {(appPath.includes('target/release') || appPath.includes('/tmp') || appPath.startsWith('/tmp')) && (
+                                <div className="mt-2 text-xs text-orange-500 font-medium">
+                                    ⚠️ {t.settings.unstablePathWarning || "Running from temporary/build location. Move to Applications for stable shortcuts."}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -180,6 +253,7 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
                     {t.settings.closeHint}
                 </div>
             </div>
+
         </div>
     );
 };

@@ -32,7 +32,8 @@ function App() {
     grouping: 'categorized',
     zoom: 100,
     theme: 'dark',
-    language: null
+    language: null,
+    useInternalShortcut: false
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'text' | 'image'>('all');

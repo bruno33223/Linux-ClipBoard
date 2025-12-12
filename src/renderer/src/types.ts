@@ -12,4 +12,5 @@ export interface Settings {
     zoom: number;
     theme: 'dark' | 'light';
     language: string | null;
+    useInternalShortcut: boolean;
 }
