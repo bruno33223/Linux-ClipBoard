@@ -123,7 +123,7 @@ pub fn update_setting(app: AppHandle, state: State<DbState>, key: String, value:
     // 2. Handle Side Effects
     if key == "useInternalShortcut" {
         if let Some(enabled) = value.as_bool() {
-             let shortcut_str = if cfg!(target_os = "macos") { "Command+Control+V" } else { "Super+Control+V" };
+             let shortcut_str = if cfg!(target_os = "macos") { "Command+Control+V" } else { "Control+Alt+V" };
              if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
                  if enabled {
                      if let Err(e) = app.global_shortcut().register(shortcut) {

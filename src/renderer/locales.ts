@@ -20,10 +20,10 @@ export const translations = {
             grouping: 'Tab Organization', // Deprecated but might be needed if I overlooked something
             zoom: 'Size (Zoom)',
 
-            useInternalShortcut: 'Use internal "Ctrl+Super+V" shortcut',
-            internalShortcutDesc: 'If enabled, the app runs in background and listens for Ctrl+Super+V directly. Disable system shortcut if using this.',
+            useInternalShortcut: 'Use internal "Ctrl+Alt+V" shortcut',
+            internalShortcutDesc: 'If enabled, the app runs in background and listens for Ctrl+Alt+V directly. Disable system shortcut if using this.',
             shortcuts: 'Keyboard Shortcuts',
-            shortcutsDesc: 'To open the app with a key (e.g. Ctrl+Super+V), create a shortcut in your Linux system:',
+            shortcutsDesc: 'To open the app with a key (e.g. Ctrl+Alt+V), create a shortcut in your Linux system:',
             shortcutsSteps: [
                 'Go to **Settings > Keyboard > Shortcuts**',
                 'Add a custom shortcut',
@@ -85,10 +85,10 @@ export const translations = {
             grouping: 'Organização das Abas',
             zoom: 'Tamanho (Zoom)',
 
-            useInternalShortcut: 'Usar atalho interno "Ctrl+Super+V"',
-            internalShortcutDesc: 'Se ativado, o app roda em segundo plano e escuta Ctrl+Super+V diretamente. Desative o atalho do sistema se usar isso.',
+            useInternalShortcut: 'Usar atalho interno "Ctrl+Alt+V"',
+            internalShortcutDesc: "Se ativado, o aplicativo escuta 'Ctrl + Alt + V' em segundo plano. Não defina um atalho do sistema.",
             shortcuts: 'Atalho de Teclado',
-            shortcutsDesc: 'Para abrir o app com uma tecla (ex: Ctrl+Super+V), crie um atalho no seu sistema Linux:',
+            shortcutsDesc: 'Para abrir o app com uma tecla (ex: Ctrl+Alt+V), crie um atalho no seu sistema Linux:',
             shortcutsSteps: [
                 'Vá em **Configurações > Teclado > Atalhos**',
                 'Adicione um atalho personalizado',

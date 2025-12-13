@@ -52,7 +52,7 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Show Clipboard", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
-            let shortcut_str = if cfg!(target_os = "macos") { "Command+Control+V" } else { "Super+Control+V" };
+            let shortcut_str = if cfg!(target_os = "macos") { "Command+Control+V" } else { "Control+Alt+V" };
 
             // PROTEÇÃO 1: Registro de atalho seguro (sem unwrap)
             if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
