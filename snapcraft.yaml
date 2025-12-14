@@ -25,7 +25,10 @@ apps:
     desktop: usr/share/applications/linux-clipboard.desktop
     environment:
       WEBKIT_FORCE_SANDBOX: "0"
+      WEBKIT_DISABLE_DMABUF_RENDERER: "1"
+      WEBKIT_DISABLE_COMPOSITING_MODE: "1"
       WEBKIT_EXEC_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+      XDG_DATA_DIRS: "$SNAP/usr/share:$XDG_DATA_DIRS"
     plugs:
       - home
       - x11
@@ -57,15 +60,16 @@ parts:
       fi
 
       # ---------------------------------------------------------
-      # CORREÇÃO DA CÓPIA DO ÍCONE E DESKTOP (Usando find para segurança)
+      # CORREÇÃO DA CÓPIA DO ÍCONE E DESKTOP
       # ---------------------------------------------------------
       
-      # Encontra o ícone png (ignora maiúsculas/minúsculas no nome)
-      ICON_SRC=$(find "$CRAFT_PART_SRC/bundle/appimage" -iname "*.png" | head -n 1)
-      if [ -n "$ICON_SRC" ]; then
-        cp "$ICON_SRC" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
+      # Procura o ícone (prioriza o do bundle, senão usa o do src-tauri)
+      if [ -f "$CRAFT_PART_SRC/bundle/appimage/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png" ]; then
+        cp "$CRAFT_PART_SRC/bundle/appimage/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
+      elif [ -f "$CRAFT_PROJECT_DIR/src-tauri/icons/icon.png" ]; then
+         cp "$CRAFT_PROJECT_DIR/src-tauri/icons/icon.png" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/linux-clipboard.png"
       else
-        echo "ERRO: Ícone .png não encontrado no bundle AppImage!"
+        echo "ERRO: Ícone não encontrado!"
         exit 1
       fi
 
@@ -74,12 +78,21 @@ parts:
       if [ -n "$DESKTOP_SRC" ]; then
         cp "$DESKTOP_SRC" "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
         
-        # Força o Exec e o Icon corretos
+        # Ajusta Exec e Icon para o ambiente Snap
         sed -i 's/^Exec=.*/Exec=linux-clipboard/' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
         sed -i 's/^Icon=.*/Icon=linux-clipboard/' "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
       else
-         echo "ERRO: Arquivo .desktop não encontrado!"
-         exit 1
+         echo "ERRO: Arquivo .desktop não encontrado no bundle!"
+         # Fallback: cria um .desktop básico se não existir
+         cat <<EOF > "$CRAFT_PART_INSTALL/usr/share/applications/linux-clipboard.desktop"
+      [Desktop Entry]
+      Name=Linux Clipboard
+      Comment=A modern clipboard manager for Linux Mint
+      Exec=linux-clipboard
+      Icon=linux-clipboard
+      Type=Application
+      Categories=Utility;
+      EOF
       fi
     stage-packages:
       - libgtk-3-0
@@ -101,3 +114,10 @@ parts:
       - libjpeg-turbo8
       - libpng16-16
       - libwebp7
+      - libappindicator3-1
+      - gir1.2-appindicator3-0.1
+      - librsvg2-common
+      - glib-networking
+      - gsettings-desktop-schemas
+      - libcanberra-gtk-module
+      - libcanberra-gtk3-module
