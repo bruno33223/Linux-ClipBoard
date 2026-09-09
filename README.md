@@ -109,11 +109,13 @@ To open the manager with a keyboard shortcut (like `Super+V`), configure a nativ
 1. Go to **System Settings** > **Keyboard** > **Shortcuts**.
 2. Add a **Custom Shortcut**.
 3. **Command**:
-   - If installed via AppImage: `/path/to/Linux-Clipboard.AppImage`
+   - If installed via Snap: `/snap/bin/linux-clipboard` (or simply `linux-clipboard`)
    - If installed via Deb: `/usr/bin/linux-clipboard`
+   - If installed via AppImage: `/path/to/Linux-Clipboard.AppImage`
 4. Define the desired shortcut key (e.g., `Super+V`).
 
 *Note: The application checks for existing instances. If already running, checking the shortcut simply brings the existing window to the cursor ("Toggle" behavior).*
+*Note for Snap users: Use `/snap/bin/linux-clipboard` to ensure the application launches inside its proper Snap environment wrapper.*
 
 ## 📝 License
 

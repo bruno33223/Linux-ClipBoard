@@ -8,7 +8,7 @@ if [ ! -f "snapcraft.yaml" ]; then
 fi
 
 # Ensure binary exists
-if [ ! -f "src-tauri/target/release/app" ]; then
+if [ ! -f "src-tauri/target/release/linux-clipboard" ] && [ ! -f "src-tauri/target/release/app" ]; then
     echo "Binary not found. Running tauri build first..."
     npm run tauri build
 fi

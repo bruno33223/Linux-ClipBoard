@@ -1,6 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Linux-Clipboard",
+  "mainBinaryName": "linux-clipboard",
   "version": "1.1.1",
   "identifier": "com.bruno.linux-clipboard",
   "build": {

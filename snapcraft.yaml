@@ -52,7 +52,9 @@ parts:
       mkdir -p $CRAFT_PART_INSTALL/usr/share/applications
       mkdir -p $CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps
 
-      if [ -f "$CRAFT_PART_SRC/app" ]; then
+      if [ -f "$CRAFT_PART_SRC/linux-clipboard" ]; then
+        cp "$CRAFT_PART_SRC/linux-clipboard" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
+      elif [ -f "$CRAFT_PART_SRC/app" ]; then
         cp "$CRAFT_PART_SRC/app" "$CRAFT_PART_INSTALL/bin/linux-clipboard"
       else
         echo "Binary not found"

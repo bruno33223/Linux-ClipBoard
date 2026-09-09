@@ -1,10 +1,10 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+name = "linux-clipboard"
+version = "1.1.1"
+description = "A modern clipboard manager for Linux"
+authors = ["Bruno33223"]
+license = "MIT"
+repository = "https://github.com/Bruno33223/Linux-Clipboard"
 edition = "2021"
 rust-version = "1.77.2"
 
