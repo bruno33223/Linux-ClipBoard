@@ -1,6 +1,6 @@
 [package]
 name = "linux-clipboard"
-version = "1.1.1"
+version = "1.1.2"
 description = "A modern clipboard manager for Linux"
 authors = ["Bruno33223"]
 license = "MIT"
