@@ -39,3 +39,7 @@ Thumbs.db
 ehthumbs.db
 .spotlight-V100
 .Trashes
+
+# Cockpit
+cockpit-agent/
+blueprint.lock.json

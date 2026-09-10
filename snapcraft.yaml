@@ -18,23 +18,32 @@ layout:
   /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
     bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
 
+slots:
+  single-instance:
+    interface: dbus
+    bus: session
+    name: org.com_bruno_linux_clipboard.SingleInstance
+
 apps:
   linux-clipboard:
     command: bin/linux-clipboard
     extensions: [gnome]
     desktop: usr/share/applications/linux-clipboard.desktop
     environment:
-      WEBKIT_FORCE_SANDBOX: "0"
+      WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1"
       WEBKIT_DISABLE_DMABUF_RENDERER: "1"
       WEBKIT_DISABLE_COMPOSITING_MODE: "1"
       WEBKIT_EXEC_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
       XDG_DATA_DIRS: "$SNAP/usr/share:$XDG_DATA_DIRS"
+    slots:
+      - single-instance
     plugs:
       - home
       - x11
       - wayland
       - desktop
       - desktop-legacy
+      - unity7
       - gsettings
       - network
       - opengl
@@ -123,3 +132,4 @@ parts:
       - gsettings-desktop-schemas
       - libcanberra-gtk-module
       - libcanberra-gtk3-module
+      - xdotool
