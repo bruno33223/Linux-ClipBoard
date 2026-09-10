@@ -18,12 +18,6 @@ layout:
   /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
     bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
 
-slots:
-  single-instance:
-    interface: dbus
-    bus: session
-    name: org.com_bruno_linux_clipboard.SingleInstance
-
 apps:
   linux-clipboard:
     command: bin/linux-clipboard
@@ -35,8 +29,6 @@ apps:
       WEBKIT_DISABLE_COMPOSITING_MODE: "1"
       WEBKIT_EXEC_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
       XDG_DATA_DIRS: "$SNAP/usr/share:$XDG_DATA_DIRS"
-    slots:
-      - single-instance
     plugs:
       - home
       - x11

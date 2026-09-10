@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 use tauri::Manager;
 use tauri::{
     menu::{Menu, MenuItem},
@@ -11,6 +13,28 @@ mod clipboard;
 mod commands;
 mod db;
 
+static LAST_SHOWN: Mutex<Option<Instant>> = Mutex::new(None);
+
+pub fn mark_window_shown() {
+    if let Ok(mut last) = LAST_SHOWN.lock() {
+        *last = Some(Instant::now());
+    }
+}
+
+pub fn is_focus_debounce_active() -> bool {
+    if let Ok(last) = LAST_SHOWN.lock() {
+        if let Some(instant) = *last {
+            return instant.elapsed() < Duration::from_millis(500);
+        }
+    }
+    false
+}
+
+pub fn show_window(window: tauri::WebviewWindow) {
+    mark_window_shown();
+    commands::show_window(window);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -19,7 +43,9 @@ pub fn run() {
                 let _ = window.hide();
                 api.prevent_close();
             } else if let tauri::WindowEvent::Focused(false) = event {
-                let _ = window.hide();
+                if !is_focus_debounce_active() {
+                    let _ = window.hide();
+                }
             }
         })
         .plugin(tauri_plugin_shell::init())
@@ -30,7 +56,7 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec![])))
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(win) = app.get_webview_window("main") {
-                 commands::show_window(win);
+                 show_window(win);
             }
         }))
         .setup(|app| {
@@ -67,7 +93,7 @@ pub fn run() {
                                     if win.is_focused().unwrap_or(false) {
                                         let _ = win.hide();
                                     } else {
-                                        commands::show_window(win);
+                                        show_window(win);
                                     }
                                 }
                             }
@@ -104,7 +130,7 @@ pub fn run() {
                         "quit" => app.exit(0),
                         "show" => {
                             if let Some(win) = app.get_webview_window("main") {
-                                 commands::show_window(win);
+                                 show_window(win);
                             }
                         }
                         _ => {}
@@ -117,7 +143,7 @@ pub fn run() {
                              if win.is_visible().unwrap_or(false) && win.is_focused().unwrap_or(false) {
                                  let _ = win.minimize();
                              } else {
-                                 commands::show_window(win);
+                                 show_window(win);
                              }
                         }
                     }

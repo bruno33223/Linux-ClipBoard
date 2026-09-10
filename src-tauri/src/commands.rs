@@ -227,6 +227,7 @@ use mouse_position::mouse_position::Mouse;
 
 #[tauri::command]
 pub fn show_window(window: tauri::WebviewWindow) {
+    crate::mark_window_shown();
     // 1. Explicit Unminimize (Vital for Linux)
     // Ensures window isn't in a hidden state internally by the WM
     let _ = window.unminimize();
@@ -239,19 +240,32 @@ pub fn show_window(window: tauri::WebviewWindow) {
     let settings = state.get_settings();
     
     match settings.position.as_str() {
-         "cursor" => {
-              let position = Mouse::get_mouse_position();
-              match position {
-                  Mouse::Position { x, y } => {
-                      let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
-                  },
-                  _ => {}
-              }
-         }
-         "center" => {
-             let _ = window.center(); 
-         }
-         _ => {}
+        "cursor" => {
+            let position = Mouse::get_mouse_position();
+            match position {
+                Mouse::Position { x, y } => {
+                    if let Ok(Some(monitor)) = window.current_monitor() {
+                        let screen_pos = monitor.position();
+                        let screen_size = monitor.size();
+                        let win_size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 400, height: 600 });
+                        let max_x = screen_pos.x + screen_size.width as i32 - win_size.width as i32;
+                        let max_y = screen_pos.y + screen_size.height as i32 - win_size.height as i32;
+                        let final_x = x.max(screen_pos.x).min(max_x);
+                        let final_y = y.max(screen_pos.y).min(max_y);
+                        let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x: final_x, y: final_y }));
+                    } else {
+                        let _ = window.center();
+                    }
+                }
+                _ => {
+                    let _ = window.center();
+                }
+            }
+        }
+        "center" => {
+            let _ = window.center();
+        }
+        _ => {}
     }
 
     // 4. Show Window
