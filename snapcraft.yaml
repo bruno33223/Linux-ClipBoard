@@ -15,14 +15,8 @@ source-code: https://github.com/Bruno33223/Linux-Clipboard
 issues: https://github.com/Bruno33223/Linux-Clipboard/issues
 
 layout:
-  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/injected-bundle:
-    bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/injected-bundle
-  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess:
-    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess
-  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess:
-    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess
-  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitGPUProcess:
-    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitGPUProcess
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
+    bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
 
 apps:
   linux-clipboard:
