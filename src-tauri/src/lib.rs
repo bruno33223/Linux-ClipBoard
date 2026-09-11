@@ -13,6 +13,65 @@ mod clipboard;
 mod commands;
 mod db;
 
+fn get_socket_path() -> std::path::PathBuf {
+    std::env::var("XDG_RUNTIME_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join("linux-clipboard.sock")
+}
+
+#[cfg(unix)]
+fn try_send_to_existing_instance() -> bool {
+    use std::os::unix::net::UnixStream;
+    use std::io::Write;
+
+    let socket_path = get_socket_path();
+    if let Ok(mut stream) = UnixStream::connect(&socket_path) {
+        let _ = stream.write_all(b"toggle\n");
+        let _ = stream.flush();
+        return true;
+    }
+    false
+}
+
+#[cfg(unix)]
+fn start_ipc_server(app: tauri::AppHandle) {
+    use std::os::unix::net::UnixListener;
+    use std::io::{BufRead, BufReader};
+
+    let socket_path = get_socket_path();
+    let _ = std::fs::remove_file(&socket_path);
+
+    std::thread::spawn(move || {
+        if let Ok(listener) = UnixListener::bind(&socket_path) {
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(stream) => {
+                        let mut reader = BufReader::new(stream);
+                        let mut line = String::new();
+                        let _ = reader.read_line(&mut line);
+                        let app_clone = app.clone();
+                        let _ = app.run_on_main_thread(move || {
+                            if let Some(win) = app_clone.get_webview_window("main") {
+                                if line.trim() == "toggle" {
+                                    if win.is_focused().unwrap_or(false) {
+                                        let _ = win.hide();
+                                    } else {
+                                        show_window(win);
+                                    }
+                                } else {
+                                    show_window(win);
+                                }
+                            }
+                        });
+                    }
+                    Err(_) => break,
+                }
+            }
+        }
+    });
+}
+
 static LAST_SHOWN: Mutex<Option<Instant>> = Mutex::new(None);
 
 pub fn mark_window_shown() {
@@ -37,6 +96,13 @@ pub fn show_window(window: tauri::WebviewWindow) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(unix)]
+    {
+        if try_send_to_existing_instance() {
+            std::process::exit(0);
+        }
+    }
+
     tauri::Builder::default()
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -73,6 +139,9 @@ pub fn run() {
             app.manage(state);
             
             clipboard::start_watcher(app.handle().clone());
+
+            #[cfg(unix)]
+            start_ipc_server(app.handle().clone());
             
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "Show Clipboard", true, None::<&str>)?;
@@ -127,7 +196,11 @@ pub fn run() {
                 .menu(&menu)
                 .on_menu_event(|app, event| {
                     match event.id.as_ref() {
-                        "quit" => app.exit(0),
+                        "quit" => {
+                            #[cfg(unix)]
+                            let _ = std::fs::remove_file(get_socket_path());
+                            app.exit(0);
+                        }
                         "show" => {
                             if let Some(win) = app.get_webview_window("main") {
                                  show_window(win);
