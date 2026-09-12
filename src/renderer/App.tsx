@@ -32,7 +32,7 @@ function App() {
     grouping: 'categorized',
     zoom: 100,
     theme: 'dark',
-    language: null,
+    language: 'en',
     useInternalShortcut: false
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -129,9 +129,8 @@ function App() {
     setHistory(data);
     if (currentSettings) {
       if (!currentSettings.language) {
-        const detectedLang = navigator.language.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en';
-        currentSettings.language = detectedLang;
-        api.updateSetting('language', detectedLang);
+        currentSettings.language = 'en';
+        api.updateSetting('language', 'en');
       }
       setSettings(currentSettings);
     }
@@ -331,6 +330,25 @@ function App() {
       {/* Main Content Area */}
       {viewMode === 'clipboard' && (
         <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+          {filteredHistory.length > 0 && (
+            <div className="flex items-center justify-between px-1 pb-2">
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${settings.theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
+                {t.tabs[activeTab]} ({filteredHistory.length})
+              </span>
+              <button
+                onClick={handleClearAll}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                  settings.theme === 'light'
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100 active:scale-95'
+                    : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
+                }`}
+                title={t.actions.clearAll}
+              >
+                <Trash2 size={13} />
+                <span>{t.actions.clearAll}</span>
+              </button>
+            </div>
+          )}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

@@ -43,7 +43,7 @@ export const translations = {
             pin: 'Pin',
             unpin: 'Unpin',
             delete: 'Delete',
-            clearAll: 'Clear All',
+            clearAll: 'Clear Clipboard',
             settings: 'Settings'
         },
         typeNav: {
@@ -109,7 +109,7 @@ export const translations = {
             pin: 'Fixar',
             unpin: 'Desafixar',
             delete: 'Excluir',
-            clearAll: 'Limpar Tudo',
+            clearAll: 'Limpar Área de Transferência',
             settings: 'Configurações'
         },
         typeNav: {

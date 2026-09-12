@@ -17,7 +17,9 @@ pub fn delete_item(state: State<DbState>, id: String) -> Vec<ClipboardItem> {
 }
 
 #[tauri::command]
-pub fn clear_all(state: State<DbState>) -> Vec<ClipboardItem> {
+pub fn clear_all(app: AppHandle, state: State<DbState>) -> Vec<ClipboardItem> {
+    let clip = app.clipboard();
+    let _ = clip.clear();
     state.clear_all();
     let _ = state.save();
     state.get_history()

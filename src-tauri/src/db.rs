@@ -33,7 +33,7 @@ impl Default for Settings {
             grouping: "categorized".to_string(),
             zoom: 100,
             theme: "dark".to_string(),
-            language: Some("pt-BR".to_string()),
+            language: Some("en".to_string()),
             use_internal_shortcut: false,
         }
     }
@@ -60,7 +60,7 @@ impl DbState {
             Database::default()
         };
         if db.settings.language.is_none() {
-            db.settings.language = Some("pt-BR".to_string());
+            db.settings.language = Some("en".to_string());
         }
         Self {
             db: Mutex::new(db),
