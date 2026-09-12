@@ -207,9 +207,19 @@ pub fn get_app_path() -> String {
     if let Ok(app_image) = std::env::var("APPIMAGE") {
         return app_image;
     }
-    std::env::current_exe()
+    if std::env::var("SNAP").is_ok() || std::env::var("SNAP_NAME").is_ok() {
+        let snap_name = std::env::var("SNAP_NAME").unwrap_or_else(|_| "linux-clipboard".to_string());
+        return format!("/snap/bin/{}", snap_name);
+    }
+    let current = std::env::current_exe()
         .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_else(|_| "Unknown".to_string())
+        .unwrap_or_else(|_| "Unknown".to_string());
+
+    if current.starts_with("/snap/") {
+        return "/snap/bin/linux-clipboard".to_string();
+    }
+
+    current
 }
 
 #[tauri::command]

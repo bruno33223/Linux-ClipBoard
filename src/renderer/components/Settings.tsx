@@ -19,7 +19,13 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
     const [autoStartEnabled, setAutoStartEnabled] = useState(false);
 
     useEffect(() => {
-        api.getAppPath().then(setAppPath);
+        api.getAppPath().then((path) => {
+            if (path.startsWith('/snap/') && !path.startsWith('/snap/bin/')) {
+                setAppPath('/snap/bin/linux-clipboard');
+            } else {
+                setAppPath(path);
+            }
+        });
         checkAutoStart();
     }, []);
 
