@@ -33,7 +33,7 @@ impl Default for Settings {
             grouping: "categorized".to_string(),
             zoom: 100,
             theme: "dark".to_string(),
-            language: None,
+            language: Some("pt-BR".to_string()),
             use_internal_shortcut: false,
         }
     }
@@ -53,12 +53,15 @@ pub struct DbState {
 impl DbState {
     pub fn new(app: &AppHandle) -> Self {
         let path = app.path().app_config_dir().expect("failed to get app config dir").join("db.json");
-        let db = if path.exists() {
+        let mut db: Database = if path.exists() {
             let content = fs::read_to_string(&path).unwrap_or_default();
             serde_json::from_str(&content).unwrap_or_default()
         } else {
             Database::default()
         };
+        if db.settings.language.is_none() {
+            db.settings.language = Some("pt-BR".to_string());
+        }
         Self {
             db: Mutex::new(db),
             path,

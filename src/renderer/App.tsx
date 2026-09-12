@@ -62,6 +62,7 @@ function App() {
     });
 
     const unsubscribeFocus = api.onForceFocus(() => {
+      setIsSettingsOpen(false);
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -75,12 +76,6 @@ function App() {
 
   useEffect(() => {
     const handleBlur = () => {
-      // If we are forcing language selection, don't close
-      if (!settings.language) return;
-
-      // If settings are open, just close settings? Or close everything?
-      // User request: "disappear (minimize) when clicking outside"
-      // Usually this means hiding the app.
       if (isSettingsOpen) {
         setIsSettingsOpen(false);
       } else {
@@ -88,7 +83,6 @@ function App() {
       }
     };
 
-    // Add logic to grab focus when window is focused
     const handleFocus = () => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -97,15 +91,21 @@ function App() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (!settings.language) return;
-        api.hideWindow();
+        if (isSettingsOpen) {
+          setIsSettingsOpen(false);
+        } else {
+          api.hideWindow();
+        }
       }
     };
 
     const handleContextMenu = (e: MouseEvent) => {
-      if (!settings.language) return;
       e.preventDefault();
-      api.hideWindow();
+      if (isSettingsOpen) {
+        setIsSettingsOpen(false);
+      } else {
+        api.hideWindow();
+      }
     };
 
     window.addEventListener('blur', handleBlur);
@@ -119,7 +119,7 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [settings.language]);
+  }, [isSettingsOpen]);
 
   const loadInitialData = async () => {
     const [data, currentSettings] = await Promise.all([
@@ -128,10 +128,12 @@ function App() {
     ]);
     setHistory(data);
     if (currentSettings) {
-      setSettings(currentSettings);
       if (!currentSettings.language) {
-        setIsSettingsOpen(true);
+        const detectedLang = navigator.language.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en';
+        currentSettings.language = detectedLang;
+        api.updateSetting('language', detectedLang);
       }
+      setSettings(currentSettings);
     }
   };
 
@@ -216,9 +218,7 @@ function App() {
     >
       <Settings
         isOpen={isSettingsOpen}
-        onClose={() => {
-          if (settings.language) setIsSettingsOpen(false);
-        }}
+        onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdate={(k, v) => { updateSetting(k, v); }}
         t={t}

@@ -36,7 +36,8 @@ export const translations = {
             themeDark: 'Dark',
             themeLight: 'Light',
             language: 'Language',
-            closeHint: 'Close to save and apply.'
+            closeHint: 'Close to save and apply.',
+            saveAndClose: 'Done'
         },
         actions: {
             pin: 'Pin',
@@ -101,7 +102,8 @@ export const translations = {
             themeDark: 'Escuro',
             themeLight: 'Claro',
             language: 'Idioma',
-            closeHint: 'Feche para salvar e aplicar.'
+            closeHint: 'Feche para salvar e aplicar.',
+            saveAndClose: 'Concluir'
         },
         actions: {
             pin: 'Fixar',

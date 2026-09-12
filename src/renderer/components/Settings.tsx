@@ -61,15 +61,19 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
     const isLangMissing = !settings.language;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className={`flex w-full max-w-sm flex-col rounded-xl border shadow-2xl max-h-[85vh] overflow-hidden ${bgColor} ${isLight ? 'border-gray-200' : 'border-white/10'}`}>
+        <div 
+            onClick={onClose}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        >
+            <div 
+                onClick={(e) => e.stopPropagation()}
+                className={`flex w-full max-w-sm flex-col rounded-xl border shadow-2xl max-h-[85vh] overflow-hidden ${bgColor} ${isLight ? 'border-gray-200' : 'border-white/10'}`}
+            >
                 <div className={`flex items-center justify-between border-b p-4 ${borderColor}`}>
                     <h2 className={`text-lg font-bold ${textColor}`}>{t.settings.title}</h2>
-                    {!isLangMissing && (
-                        <button onClick={onClose} className={`rounded-full p-1 ${closeBtnHover}`}>
-                            <X size={20} className={closeBtnIcon} />
-                        </button>
-                    )}
+                    <button onClick={onClose} className={`rounded-full p-1 ${closeBtnHover}`} title="Fechar">
+                        <X size={20} className={closeBtnIcon} />
+                    </button>
                 </div>
 
                 <div className="flex-1 space-y-6 overflow-y-auto p-4 scrollbar-hide">
@@ -249,8 +253,16 @@ export const Settings = ({ isOpen, onClose, settings, onUpdate, t }: SettingsPro
                     </div>
                 </div>
 
-                <div className={`border-t p-4 text-center text-xs ${borderColor} ${isLight ? 'text-gray-400' : 'text-white/30'}`}>
-                    {t.settings.closeHint}
+                <div className={`border-t p-3 flex items-center justify-between gap-3 ${borderColor}`}>
+                    <span className={`text-xs ${isLight ? 'text-gray-400' : 'text-white/40'}`}>
+                        {t.settings.closeHint}
+                    </span>
+                    <button
+                        onClick={onClose}
+                        className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow hover:bg-blue-700 transition-colors"
+                    >
+                        {t.settings.saveAndClose}
+                    </button>
                 </div>
             </div>
 
