@@ -46,26 +46,42 @@ pub fn paste_item(app: AppHandle, state: State<DbState>, id: String) {
         if item.r#type == "text" {
             let _ = clip.write_text(item.content.clone());
         } else if item.r#type == "image" {
-             // Decode base64
-             use base64::Engine;
-             let b64 = item.content.clone();
-             // Remove prefix if present (e.g. "data:image/png;base64,")
-             let b64_clean = if let Some(idx) = b64.find(',') {
-                 &b64[idx+1..]
-             } else {
-                 &b64
-             };
+            // Robust media resolution: Check absolute path, or resolve filename against current media_dir
+            let file_candidate = if std::path::Path::new(&item.content).is_absolute() && std::path::Path::new(&item.content).exists() {
+                std::path::PathBuf::from(&item.content)
+            } else if let Some(file_name) = std::path::Path::new(&item.content).file_name() {
+                state.media_dir.join(file_name)
+            } else {
+                state.media_dir.join(&item.content)
+            };
 
-             if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64_clean) {
-                 if let Ok(img) = image::load_from_memory(&bytes) {
-                     let rgba_img = img.to_rgba8();
-                     let (width, height) = rgba_img.dimensions();
-                     let pixels = rgba_img.into_raw();
-                     
-                     let tauri_image = tauri::image::Image::new(&pixels, width, height);
-                     let _ = clip.write_image(&tauri_image);
-                 }
-             }
+            let img_result = if file_candidate.exists() {
+                image::open(&file_candidate)
+            } else {
+                // Decode base64 fallback for legacy items
+                use base64::Engine;
+                let b64 = item.content.clone();
+                let b64_clean = if let Some(idx) = b64.find(',') {
+                    &b64[idx+1..]
+                } else {
+                    &b64
+                };
+
+                if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64_clean) {
+                    image::load_from_memory(&bytes)
+                } else {
+                    Err(image::ImageError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "Failed to decode")))
+                }
+            };
+
+            if let Ok(img) = img_result {
+                let rgba_img = img.to_rgba8();
+                let (width, height) = rgba_img.dimensions();
+                let pixels = rgba_img.into_raw();
+                
+                let tauri_image = tauri::image::Image::new(&pixels, width, height);
+                let _ = clip.write_image(&tauri_image);
+            }
         }
 
         // Hide window
@@ -281,33 +297,22 @@ pub fn show_window(window: tauri::WebviewWindow) {
     }
 
     // 4. Show Window
+    let _ = window.unminimize();
     let _ = window.show();
 
     // 5. Force Focus immediately
     let _ = window.set_focus();
 
-    // NUCLEAR OPTION: xdotool
-    // Force WM to activate window using xdotool
-    let shell = window.app_handle().shell();
-    let _ = shell.command("xdotool")
-        .args(["search", "--name", "Linux Clipboard", "windowactivate"])
-        .spawn();
-
     // EMIT FORCE FOCUS EVENT (Immediate)
     let _ = window.emit("force-focus", ());
 
-    // 6. Aggressive Focus Strategy (Async "Reinforcement")
+    // 6. Focus Strategy (Async "Reinforcement")
     // Schedule a second attempt after 100ms to catch up with WM animations/composition
     let win_clone = window.clone();
     
     tauri::async_runtime::spawn(async move {
         std::thread::sleep(std::time::Duration::from_millis(100));
         let _ = win_clone.set_focus();
-        
-        let shell = win_clone.app_handle().shell();
-        let _ = shell.command("xdotool")
-            .args(["search", "--name", "Linux Clipboard", "windowactivate"])
-            .spawn();
 
         // EMIT FORCE FOCUS EVENT (Delayed)
         let _ = win_clone.emit("force-focus", ());

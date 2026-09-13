@@ -2,6 +2,7 @@ export interface ClipboardItem {
     id: string;
     type: 'text' | 'image';
     content: string;
+    thumbnail?: string;
     timestamp: number;
     isPinned: boolean;
 }

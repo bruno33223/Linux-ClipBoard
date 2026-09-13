@@ -37,8 +37,14 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({ item, onDelete, on
                     </p>
                 ) : (
                     <img
-                        src={`data:image/png;base64,${item.content}`}
+                        src={
+                            item.thumbnail
+                                ? (item.thumbnail.startsWith('data:') ? item.thumbnail : `data:image/jpeg;base64,${item.thumbnail}`)
+                                : (item.content.startsWith('data:') ? item.content : `data:image/png;base64,${item.content}`)
+                        }
                         alt="Clipboard Image"
+                        loading="lazy"
+                        decoding="async"
                         className="max-h-24 w-full rounded object-contain bg-black/50"
                     />
                 )}

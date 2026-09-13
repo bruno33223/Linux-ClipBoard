@@ -194,8 +194,8 @@ function App() {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       data = data.filter(item =>
-        item.content.toLowerCase().includes(lowerQuery) ||
-        (item.type === 'image' && 'image'.includes(lowerQuery))
+        (item.type === 'text' && item.content.toLowerCase().includes(lowerQuery)) ||
+        (item.type === 'image' && ('image'.includes(lowerQuery) || 'imagem'.includes(lowerQuery)))
       );
     }
     if (activeTab !== 'all') {

@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use serde::{Serialize, Deserialize};
 use tauri::{AppHandle, Manager};
@@ -10,6 +10,8 @@ pub struct ClipboardItem {
     pub id: String,
     pub r#type: String, // "text" or "image"
     pub content: String,
+    #[serde(default)]
+    pub thumbnail: Option<String>,
     pub timestamp: i64,
     pub is_pinned: bool,
 }
@@ -48,11 +50,16 @@ pub struct Database {
 pub struct DbState {
     pub db: Mutex<Database>,
     pub path: PathBuf,
+    pub media_dir: PathBuf,
 }
 
 impl DbState {
     pub fn new(app: &AppHandle) -> Self {
-        let path = app.path().app_config_dir().expect("failed to get app config dir").join("db.json");
+        let app_config = app.path().app_config_dir().expect("failed to get app config dir");
+        let path = app_config.join("db.json");
+        let media_dir = app_config.join("media");
+        let _ = fs::create_dir_all(&media_dir);
+
         let mut db: Database = if path.exists() {
             let content = fs::read_to_string(&path).unwrap_or_default();
             serde_json::from_str(&content).unwrap_or_default()
@@ -62,10 +69,69 @@ impl DbState {
         if db.settings.language.is_none() {
             db.settings.language = Some("en".to_string());
         }
-        Self {
+
+        // Automatic migration: offload heavy base64 images from db.json into media files & thumbnails,
+        // and sanitize image paths so they are always referenced against current media_dir
+        let mut needs_save = false;
+        for item in &mut db.history {
+            if item.r#type == "image" {
+                // Check if path is pointing to an old snap revision directory or needs re-anchoring
+                if !item.content.starts_with("data:image") && item.content.len() < 1000 {
+                    if let Some(file_name) = Path::new(&item.content).file_name() {
+                        let current_path = media_dir.join(file_name);
+                        if current_path.exists() && item.content != current_path.to_string_lossy().as_ref() {
+                            item.content = current_path.to_string_lossy().to_string();
+                            needs_save = true;
+                        }
+                    }
+                }
+
+                if item.thumbnail.is_none() || item.content.starts_with("data:image") || item.content.len() > 1000 {
+                    let b64_clean = if let Some(idx) = item.content.find(',') {
+                        &item.content[idx+1..]
+                    } else {
+                        &item.content
+                    };
+
+                    use base64::Engine;
+                    if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64_clean) {
+                        let file_path = media_dir.join(format!("{}.png", item.id));
+                        let _ = fs::write(&file_path, &bytes);
+
+                        if let Ok(img) = image::load_from_memory(&bytes) {
+                            let thumb = img.thumbnail(360, 200);
+                            let mut thumb_bytes = Vec::new();
+                            let mut cursor = std::io::Cursor::new(&mut thumb_bytes);
+                            if thumb.to_rgb8().write_to(&mut cursor, image::ImageFormat::Jpeg).is_ok() {
+                                let b64 = base64::engine::general_purpose::STANDARD.encode(&thumb_bytes);
+                                item.thumbnail = Some(format!("data:image/jpeg;base64,{}", b64));
+                            } else {
+                                thumb_bytes.clear();
+                                let mut cursor = std::io::Cursor::new(&mut thumb_bytes);
+                                let _ = thumb.write_to(&mut cursor, image::ImageFormat::Png);
+                                let b64 = base64::engine::general_purpose::STANDARD.encode(&thumb_bytes);
+                                item.thumbnail = Some(format!("data:image/png;base64,{}", b64));
+                            }
+                        }
+
+                        item.content = file_path.to_string_lossy().to_string();
+                        needs_save = true;
+                    }
+                }
+            }
+        }
+
+        let state = Self {
             db: Mutex::new(db),
             path,
+            media_dir,
+        };
+
+        if needs_save {
+            let _ = state.save();
         }
+
+        state
     }
 
     pub fn save(&self) -> Result<(), String> {
@@ -95,20 +161,43 @@ impl DbState {
         }
         db.history.insert(0, item);
         if db.history.len() > 100 {
-            db.history.truncate(100);
+            let removed = db.history.split_off(100);
+            for r in removed {
+                if r.r#type == "image" {
+                    if let Some(file_name) = Path::new(&r.content).file_name() {
+                        let _ = fs::remove_file(self.media_dir.join(file_name));
+                    }
+                }
+            }
         }
     }
 
     pub fn delete_item(&self, id: &str) {
         let mut db = self.db.lock().unwrap();
         if let Some(index) = db.history.iter().position(|x| x.id == id) {
-            db.history.remove(index);
+            let item = db.history.remove(index);
+            if item.r#type == "image" {
+                if let Some(file_name) = Path::new(&item.content).file_name() {
+                    let _ = fs::remove_file(self.media_dir.join(file_name));
+                }
+            }
         }
     }
 
     pub fn clear_all(&self) {
         let mut db = self.db.lock().unwrap();
-        db.history.retain(|x| x.is_pinned);
+        db.history.retain(|x| {
+            if !x.is_pinned {
+                if x.r#type == "image" {
+                    if let Some(file_name) = Path::new(&x.content).file_name() {
+                        let _ = fs::remove_file(self.media_dir.join(file_name));
+                    }
+                }
+                false
+            } else {
+                true
+            }
+        });
     }
     
     pub fn toggle_pin(&self, id: &str) {
