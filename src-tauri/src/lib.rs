@@ -72,9 +72,13 @@ fn start_ipc_server(app: tauri::AppHandle) {
     });
 }
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 static LAST_SHOWN: Mutex<Option<Instant>> = Mutex::new(None);
+static HAS_GAINED_FOCUS: AtomicBool = AtomicBool::new(false);
 
 pub fn mark_window_shown() {
+    HAS_GAINED_FOCUS.store(false, Ordering::SeqCst);
     if let Ok(mut last) = LAST_SHOWN.lock() {
         *last = Some(Instant::now());
     }
@@ -83,13 +87,14 @@ pub fn mark_window_shown() {
 pub fn is_focus_debounce_active() -> bool {
     if let Ok(last) = LAST_SHOWN.lock() {
         if let Some(instant) = *last {
-            return instant.elapsed() < Duration::from_millis(300);
+            return instant.elapsed() < Duration::from_millis(800);
         }
     }
     false
 }
 
 pub fn show_window(window: tauri::WebviewWindow) {
+    mark_window_shown();
     commands::show_window(window);
 }
 
@@ -107,9 +112,12 @@ pub fn run() {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let _ = window.hide();
                 api.prevent_close();
+            } else if let tauri::WindowEvent::Focused(true) = event {
+                HAS_GAINED_FOCUS.store(true, Ordering::SeqCst);
             } else if let tauri::WindowEvent::Focused(false) = event {
-                if !is_focus_debounce_active() {
+                if HAS_GAINED_FOCUS.load(Ordering::SeqCst) && !is_focus_debounce_active() {
                     let _ = window.hide();
+                    HAS_GAINED_FOCUS.store(false, Ordering::SeqCst);
                 }
             }
         })
@@ -212,8 +220,8 @@ pub fn run() {
                     if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
                         let app = tray.app_handle();
                         if let Some(win) = app.get_webview_window("main") {
-                             if win.is_visible().unwrap_or(false) {
-                                 let _ = win.hide();
+                             if win.is_visible().unwrap_or(false) && win.is_focused().unwrap_or(false) {
+                                 let _ = win.minimize();
                              } else {
                                  show_window(win);
                              }

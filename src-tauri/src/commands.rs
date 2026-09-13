@@ -306,21 +306,15 @@ pub fn show_window(window: tauri::WebviewWindow) {
     // EMIT FORCE FOCUS EVENT (Immediate)
     let _ = window.emit("force-focus", ());
 
-    // 6. Focus Strategy (Async "Reinforcement" & Window Manager Activation)
+    // 6. Focus Strategy (Async "Reinforcement")
+    // Schedule a second attempt after 100ms to catch up with WM animations/composition
     let win_clone = window.clone();
     
     tauri::async_runtime::spawn(async move {
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(100));
         let _ = win_clone.set_focus();
-        let _ = win_clone.emit("force-focus", ());
 
-        #[cfg(target_os = "linux")]
-        {
-            let shell = win_clone.app_handle().shell();
-            let _ = shell.command("xdotool")
-                .args(["search", "--onlyvisible", "--class", "linux-clipboard", "windowactivate"])
-                .output()
-                .await;
-        }
+        // EMIT FORCE FOCUS EVENT (Delayed)
+        let _ = win_clone.emit("force-focus", ());
     });
 }
